@@ -1,7 +1,4 @@
 #!/usr/bin/python
-'''
-A test branch
-'''
 
 class gmxtop:
     # private variables

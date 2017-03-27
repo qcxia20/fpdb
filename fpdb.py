@@ -1,10 +1,8 @@
-#!/usr/bin/python
+#!/bin/env python
 import math
-import simtk.openmm.app as soa
-import simtk.unit as su
+#import simtk.openmm.app as soa
+#import simtk.unit as su
 import sys,os
-''' slite difference'''
-
 
 MAX = 99999
 TMPFILE = "FPDB.SOA.TMPPDBFILE.PDB"
@@ -17,7 +15,9 @@ if True: ### residue names
          'ASN','GLN','SER','THR','CYS','CYX','GLY','PRO','ALA',
          'VAL','LEU','ILE','MET','PHE','TYR','TRP' )
 
+    standard_ion_redsidues = ('FE','MN','NI','CA','ZN','MG')
     standard_water_redsidues = ('HOH','SOL','WAT')
+    standard_redsidues = standard_protein_residues + standard_water_redsidues + standard_ion_redsidues
 
     protein_hbond_donors = (
         ('*','N','H'),
@@ -81,7 +81,7 @@ if True: ### Global varieties
     TMPFILE = 'FIND_RING.PDB'
     TMPFILE_MOL2 = 'FIND_RING.mol2'
     babel = '/usr/bin/babel'
-
+"""
 class framePDB( soa.PDBFile ):
     def __init__(self,frame):
         if hasattr(frame,'isalpha'):
@@ -157,6 +157,7 @@ class framePDB( soa.PDBFile ):
         for resi in self.topology.residues():
             #load residue parameters
             name = self._find_res_name(resi,top)
+"""
 
 class fATOM():
     def __init__(self,atom_line):
@@ -260,6 +261,32 @@ class fCHEMO():
                 line = 'ATOM  %5d %4s %3s %1s%4d    %8.3f%8.3f%8.3f%6.2f%6.2f\n'%(atom.index,atom.name,self.name,self.chain,self.index,x,y,z,atom.occ,atom.bf)
                 ofp.write(line)
             ofp.close()
+    
+    def write_pdb_plop(self,ofile):
+        if self.name in standard_protein_residues:
+            atomline='ATOM  %5d %4s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n'
+        else:
+            atomline='HETATM%5d %4s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n'
+        if self.name in standard_ion_redsidues:
+            atomline='HETATM%5d %-4s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n'
+        if hasattr(ofile,'write'):
+            ofp = ofile
+            if self.name not in standard_protein_residues:ofp.write('TER\n')
+            for atom in self.atoms:
+                x,y,z = atom.posi
+                line = atomline%(atom.index,atom.name,atom.conf,self.name,self.chain,self.index,x,y,z)
+                ofp.write(line)
+            if self.name not in standard_protein_residues:ofp.write('TER\n')
+        else:
+            ofp = open(ofile,'a')
+            if self.name not in standard_protein_residues:ofp.write('TER\n')
+            for atom in self.atoms:
+                x,y,z = atom.posi
+                line = atomline%(atom.index,atom.name,atom.conf,self.name,self.chain,self.index,x,y,z)
+                ofp.write(line)
+            if self.name not in standard_protein_residues:ofp.write('TER\n')
+            ofp.close()
+
     def debug(self):
         print 'name',self.name
         print 'index',self.index
@@ -481,7 +508,6 @@ class fPDB:
                 except:
                     pass
         
-        
         self.topology = fTOPOLOGY(lines)
 
     @staticmethod
@@ -516,6 +542,7 @@ class fPDB:
         # print "##### Warning : Error in loading residue parameters ",resi.name,resi.index, " set all parameter within this residue to zero "
         for atom in resi.atoms:
             atom.addparm(0,0,0)
+        # print "Error loading residue parameters",resi.name,resi.index
         return
 
     def load_ff_params(self, gmxtop ):
@@ -601,6 +628,7 @@ def dist_2(a,b):
     else:
         x2,y2,z2 = b
     return (x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2 
+
 def dist(a,b):
     return math.sqrt( dist_2(a,b) )
 def dist_resi_resi_2(a,b):
@@ -631,8 +659,10 @@ def dist_atom_resi_2(a,b):
             if tmp< dist:
                 dist = tmp
     return dist
+
 def dist_atom_resi(a,b):
     return math.sqrt( dist_atom_resi_2(a,b) )
+
 def angle( a1,b,a2):
     dist_a1_a2_2 = dist_2(a1,a2)
     dist_a1_b = dist(a1,b)
@@ -640,6 +670,7 @@ def angle( a1,b,a2):
     cos_angle = ( - dist_a1_a2_2 + dist_a1_b**2 + dist_a2_b**2 )/( 2*dist_a1_b*dist_a2_b )
     angle = math.acos(cos_angle)
     return angle
+
 def potential_atom_atom( atoma,atomb ):
     d_2 = dist_2(atoma,atomb)
     vdw =  calc_vdw(atoma,atomb,d_2) 
