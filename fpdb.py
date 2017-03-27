@@ -3,6 +3,7 @@ import math
 #import simtk.openmm.app as soa
 #import simtk.unit as su
 import sys,os
+''' bla '''
 
 MAX = 99999
 TMPFILE = "FPDB.SOA.TMPPDBFILE.PDB"
