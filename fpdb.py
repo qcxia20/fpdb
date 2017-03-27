@@ -1,10 +1,9 @@
-#!/usr/bin/python
+#!/bin/env python
 import math
-import simtk.openmm.app as soa
-import simtk.unit as su
+#import simtk.openmm.app as soa
+#import simtk.unit as su
 import sys,os
-
-
+#####haha
 MAX = 99999
 TMPFILE = "FPDB.SOA.TMPPDBFILE.PDB"
 kJ_to_kcal = 1/4.184
@@ -15,9 +14,9 @@ if True: ### residue names
          'HID','ASP','GLU',
          'ASN','GLN','SER','THR','CYS','CYX','GLY','PRO','ALA',
          'VAL','LEU','ILE','MET','PHE','TYR','TRP' )
-
+    standard_ion_redsidues = ('FE','MN','NI','CA','ZN','MG')
     standard_water_redsidues = ('HOH','SOL','WAT')
-
+    standard_redsidues = standard_protein_residues + standard_water_redsidues + standard_ion_redsidues
     protein_hbond_donors = (
         ('*','N','H'),
         ('*','N','HN'),
@@ -80,7 +79,7 @@ if True: ### Global varieties
     TMPFILE = 'FIND_RING.PDB'
     TMPFILE_MOL2 = 'FIND_RING.mol2'
     babel = '/usr/bin/babel'
-
+"""
 class framePDB( soa.PDBFile ):
     def __init__(self,frame):
         if hasattr(frame,'isalpha'):
@@ -100,9 +99,6 @@ class framePDB( soa.PDBFile ):
             if residue.name in standard_protein_residues:
                 for atom in residue.atoms():
                     ##### Oxygen in protein. all could be regareded as hbond receptor
-                    if atom.element == None:
-                        continue 
-
                     if atom.element.symbol == 'O':
                         acceptors.append( self.positions[atom.index] )
                     ##### Nitrogen in protein. Only those in Imidazole ring are considered
@@ -156,6 +152,7 @@ class framePDB( soa.PDBFile ):
         for resi in self.topology.residues():
             #load residue parameters
             name = self._find_res_name(resi,top)
+"""
 
 class fATOM():
     def __init__(self,atom_line):
@@ -173,13 +170,7 @@ class fATOM():
         x = float(atom_line[30:38])
         y = float(atom_line[38:46])
         z = float(atom_line[46:54])
-        self.posi = [x,y,z]
-        try:
-            self.bf =  float(atom_line[60:66])
-            self.occ =  float(atom_line[54:60])
-        except:
-            self.bf = 0
-            self.occ = 0
+        self.posi = (x,y,z)
         self.connect_count = 0 ## for bond
         self.bond = list()
         self.var1 = None
@@ -250,14 +241,39 @@ class fCHEMO():
             ofp = ofile
             for atom in self.atoms:
                 x,y,z = atom.posi
-                line = 'ATOM  %5d %4s%1s%3s %1s%4d    %8.3f%8.3f%8.3f%6.2f%6.2f\n'%(atom.index,atom.name,atom.conf,self.name,self.chain,self.index,x,y,z,atom.occ,atom.bf)
+                line = 'ATOM  %5d %4s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n'%(atom.index,atom.name,atom.conf,self.name,self.chain,self.index,x,y,z)
                 ofp.write(line)
         else:
             ofp = open(ofile,'w')
             for atom in self.atoms:
                 x,y,z = atom.posi
-                line = 'ATOM  %5d %4s %3s %1s%4d    %8.3f%8.3f%8.3f%6.2f%6.2f\n'%(atom.index,atom.name,self.name,self.chain,self.index,x,y,z,atom.occ,atom.bf)
+                line = 'ATOM  %5d %4s %3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n'%(atom.index,atom.name,self.name,self.chain,self.index,x,y,z)
                 ofp.write(line)
+            ofp.close()
+    
+    def write_pdb_plop(self,ofile):
+        if self.name in standard_protein_residues:
+            atomline='ATOM  %5d %4s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n'
+        else:
+            atomline='HETATM%5d %4s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n'
+        if self.name in standard_ion_redsidues:
+            atomline='HETATM%5d %-4s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n'
+        if hasattr(ofile,'write'):
+            ofp = ofile
+            if self.name not in standard_protein_residues:ofp.write('TER\n')
+            for atom in self.atoms:
+                x,y,z = atom.posi
+                line = atomline%(atom.index,atom.name,atom.conf,self.name,self.chain,self.index,x,y,z)
+                ofp.write(line)
+            if self.name not in standard_protein_residues:ofp.write('TER\n')
+        else:
+            ofp = open(ofile,'a')
+            if self.name not in standard_protein_residues:ofp.write('TER\n')
+            for atom in self.atoms:
+                x,y,z = atom.posi
+                line = atomline%(atom.index,atom.name,atom.conf,self.name,self.chain,self.index,x,y,z)
+                ofp.write(line)
+            if self.name not in standard_protein_residues:ofp.write('TER\n')
             ofp.close()
     def debug(self):
         print 'name',self.name
@@ -464,22 +480,6 @@ class fPDB:
             lines = open(frame).readlines()
         else:
             lines = frame
-
-        for line in lines:
-            if len(line)>=6 and line[:6]=="CRYST1":
-                x = float(line.split()[1])
-                y = float(line.split()[2])
-                z = float(line.split()[3])
-                self.box = x,y,z
-                break
-        self.model_n = 1
-        for line in lines:
-            if len(line)>=6 and line[:6]=="MODEL ":
-                try:
-                    self.model_n = int(line[10:14])
-                except:
-                    pass
-        
         
         self.topology = fTOPOLOGY(lines)
 
@@ -489,32 +489,12 @@ class fPDB:
         for gmx_resi in gmxtop.get_resilist():
             gmx_atoms = set([ x[0] for x in gmxtop.get_resi(gmx_resi) ] )
             if resi_atoms == gmx_atoms:
-                # print ">>>>> Loading GMX parameters : %s"%gmx_resi
-                if resi.name != gmx_resi :
-                    pass
-                    # print "===== Warning : different residue names while loading parameters %s and %s"%(resi.name,gmx_resi)
                 for atom in resi.atoms:
                     for gmx_atom in gmxtop.get_resi(gmx_resi):
                         if atom.name == gmx_atom[0]:
                             atom.addparm( gmx_atom[3],gmx_atom[1],gmx_atom[2] )
                 return 
-        for gmx_resi in gmxtop.get_resilist_amber():
-            gmx_atoms = set( [ x[0] for x in gmxtop.get_resi_amber(gmx_resi) ] )
-
-            if resi_atoms == gmx_atoms:
-                pass
-                # print ">>>>> Loading AMBER parameters : %s"%gmx_resi
-                if resi.name != gmx_resi :
-                    pass
-                    # print "##### Warning : Different residue names while loading parameters %s and %s"%(resi.name,gmx_resi)
-                for atom in resi.atoms:
-                    for gmx_atom in gmxtop.get_resi_amber(gmx_resi):
-                        if atom.name == gmx_atom[0]:
-                            atom.addparm( gmx_atom[3],gmx_atom[1],gmx_atom[2] )
-                return 
-        # print "##### Warning : Error in loading residue parameters ",resi.name,resi.index, " set all parameter within this residue to zero "
-        for atom in resi.atoms:
-            atom.addparm(0,0,0)
+        print "Error loading residue parameters",resi.name,resi.index
         return
 
     def load_ff_params(self, gmxtop ):
@@ -526,50 +506,6 @@ class fPDB:
         for resi in self.topology.residues:
             for atom in resi.atoms:
                 print atom.name,atom.charge,atom.sig,atom.eps
-
-    def find_protein_center(self):
-        n = 0
-        xs = 0.
-        ys = 0.
-        zs = 0.
-        for residue in self.topology.residues:
-            if residue.name in standard_protein_residues:
-                for atom in residue.atoms:
-                    x,y,z = atom.posi
-                    xs += x
-                    ys += y
-                    zs += z
-                    n += 1
-        if n == 0 :
-            return 0,0,0
-        else:
-            return xs/n,ys/n,zs/n
-
-    def center(self, center_posi = (0,0,0) ):
-        for resi in self.topology.residues:
-            for atom in resi.atoms:
-                for i in range(3):
-                    if atom.posi[i] - center_posi[i] > 0:
-                        atom.posi[i] = atom.posi[i] - self.box[i]*int( ( atom.posi[i]-center_posi[i] )/self.box[i] + 0.5 )
-                    else :
-                        atom.posi[i] = atom.posi[i] + self.box[i]*int( ( - atom.posi[i] + center_posi[i] )/self.box[i] + 0.5 )
-
-    def write_pdb(self,ofp):
-        if hasattr(ofp,'write'):
-            flag_is_handle = True
-            flag_is_str = False
-        else:
-            ofp = open(ofp,'w')
-            flag_is_handle = False
-            flag_is_str = True
-
-        ofp.write("MODEL     %4d\n"%self.model_n)
-        ofp.write("CRYST1%9.3f%9.3f%9.3f  90.00  90.00  90.00 P 65 2 2     12\n"%self.box)
-        self.topology.write_model(ofp)
-        ofp.write("ENDMDL\n")
-
-        if flag_is_str:
-            ofp.close()
 
 ###### Function to compute vdw
 def calc_vdw(a,b,dist_2):
@@ -591,14 +527,8 @@ def calc_chg(a,b,dist_2):
 
 ###### dist_2 atom atom
 def dist_2(a,b):
-    if hasattr(a,'posi'):
-        x1,y1,z1 = a.posi
-    else:
-        x1,y1,z1 = a
-    if hasattr(b,'posi'):
-        x2,y2,z2 = b.posi
-    else:
-        x2,y2,z2 = b
+    x1,y1,z1 = a.posi
+    x2,y2,z2 = b.posi
     return (x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2 
 def dist(a,b):
     return math.sqrt( dist_2(a,b) )
@@ -615,20 +545,11 @@ def dist_resi_resi(a,b):
     return math.sqrt(dist_resi_resi_2(a,b))
 def dist_atom_resi_2(a,b):
     dist = BIG_NUM 
-    if hasattr(b,'atoms'):
-        assert len(b.atoms)>0
-    else:
-        assert len(b) > 0
-    if hasattr(b,'atoms'):
-        for j in b.atoms:
-            tmp = dist_2(a,j)
-            if tmp< dist:
-                dist = tmp
-    else:
-        for j in b:
-            tmp = dist_2(a,j)
-            if tmp< dist:
-                dist = tmp
+    assert len(b.atoms)>0
+    for j in b.atoms:
+        tmp = dist_2(a,j)
+        if tmp< dist:
+            dist = tmp
     return dist
 def dist_atom_resi(a,b):
     return math.sqrt( dist_atom_resi_2(a,b) )
@@ -667,7 +588,6 @@ def next_frame(filename):
         elif len(line)>=6 and line[:3] == "END":
             frame.append(line)
             yield frame
-            frame = list()
         else:
             frame.append(line)
 
