@@ -508,7 +508,10 @@ class fPDB:
         for line in lines:
             if len(line)>=6 and line[:6]=="MODEL ":
                 try:
-                    self.model_n = int(line[10:14])
+                    if len(line.split())==2:
+                        self.model_n = int(line.split()[-1])    
+                    else:
+                        self.model_n = int(line[5:14])
                 except:
                     pass
         
