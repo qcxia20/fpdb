@@ -501,7 +501,7 @@ class fPDB:
                 self.box = x,y,z
                 break
 
-        if not has_attr(self,'box'):
+        if not hasattr(self,'box'):
             self.box = 0,0,0
 
         self.model_n = 1
