@@ -500,6 +500,10 @@ class fPDB:
                 z = float(line.split()[3])
                 self.box = x,y,z
                 break
+
+        if not has_attr(self,'box'):
+            self.box = 0,0,0
+
         self.model_n = 1
         for line in lines:
             if len(line)>=6 and line[:6]=="MODEL ":
