@@ -81,86 +81,13 @@ if True: ### Global varieties
     TMPFILE = 'FIND_RING.PDB'
     TMPFILE_MOL2 = 'FIND_RING.mol2'
     babel = '/usr/bin/babel'
-"""
-class framePDB( soa.PDBFile ):
-    def __init__(self,frame):
-        if hasattr(frame,'isalpha'):
-            soa.PDBFile.__init__(self,frame) ## here frame is the name of pdbfile
-        else:
-            ofp = open(TMPFILE,'w')
-            for line in frame:
-                ofp.write(line)
-            ofp.close()
-            soa.PDBFile.__init__(self,TMPFILE)
-            os.remove(TMPFILE)
-
-    def find_rec_hbond_acceptors(self):
-        acceptors = list()
-        residues = self.topology.residues()
-        for residue in residues:
-            if residue.name in standard_protein_residues:
-                for atom in residue.atoms():
-                    ##### Oxygen in protein. all could be regareded as hbond receptor
-                    if atom.element == None:
-                        continue 
-
-                    if atom.element.symbol == 'O':
-                        acceptors.append( self.positions[atom.index] )
-                    ##### Nitrogen in protein. Only those in Imidazole ring are considered
-                    elif atom.element.symbol == 'N' :
-                        if residue.name in ('HIS','HID','HIP','HIE'):
-                            if atom.name not in ('NH','N'):
-                                acceptors.append( self.positions[atom.index] )
-                    ##### sulfide ignored. 
-                    elif atom.element.symbol == 'S':
-                        pass
-        return acceptors
-
-    def find_atom(self,residue,atomname):
-        for atom in residue.atoms():
-            if atom.name == atomname:
-                return atom.index
-        return None
-
-    def find_rec_hbond_donors(self):
-        donors = list()
-        residues = self.topology.residues()
-        for residue in residues:
-            if residue.name in standard_protein_residues:
-                for template in protein_hbond_donors:
-                    rname,dname,hname = template
-                    if residue.name == rname or rname == '*':
-                        d_index = self.find_atom(residue,dname)
-                        h_index = self.find_atom(residue,hname)
-                        if d_index and h_index:
-                            donor = self.positions[d_index],self.positions[h_index]
-                            donors.append(donor)
-                    else:
-                        pass
-        return donors
-
-    def _find_res_name( self,resi, top ):
-        name = None
-        res_atom_list = set()
-        for atom in resi.atoms():
-            res_atom_list.add(atom.name)
-        for topresi in top.get_resilist():
-            top_res_atom_list = None
-            top_res_atom_list = set( [x[0] for x in top.get_resi(topresi)] )
-            if top_res_atom_list == res_atom_list:
-                name =  topresi
-                break
-        return name
-
-    def load_ff_params(self, top ):
-        self._params = dict()
-        for resi in self.topology.residues():
-            #load residue parameters
-            name = self._find_res_name(resi,top)
-"""
 
 class fATOM():
-    def __init__(self,atom_line):
+    def __init__(self,atom_line = None):
+
+        if atom_line == None:
+            atom_line = "ATOM      1  X   DEF     1       0.000   0.000   0.000  1.00  0.00           X"        
+
         tmpname = atom_line[12:16]
         if tmpname[0] in "0123456789" and tmpname[3]!=" ":
             tmpname = tmpname[1:] + tmpname[0]
@@ -213,14 +140,23 @@ class fCHEMO():
         for atom_line in resi_lines:
             if len(atom_line)>=6 and atom_line[:6] in ('HETATM','ATOM  '):
                 yield atom_line
-    def __init__(self,resi_lines):
-        assert len(resi_lines) > 0
-        self.name = resi_lines[0][17:20].strip()
-        self.index = int(resi_lines[0][22:26])
-        self.chain = resi_lines[0][21]
-        self.insertion = resi_lines[0][26]
+    def __init__(self,resi_lines=None):
+        if resi_lines == None:
+            resi_lines = list()
+        try:
+            self.name = resi_lines[0][17:20].strip()
+            self.index = int(resi_lines[0][22:26])
+            self.chain = resi_lines[0][21]
+            self.insertion = resi_lines[0][26]
+        except:
+            self.name = "UND"
+            self.index = "0"
+            self.chain = " "
+            self.insertion = " "
+
         self.atoms = list()
         self.index_shift = 0
+            
         for atom_line in fRESIDUE._next_atom_line(resi_lines):
             self.atoms.append( fATOM(atom_line) )
         if len(self.atoms)>0:
@@ -233,6 +169,19 @@ class fCHEMO():
         self.var1 = None
         self.var2 = None
         self.var3 = None
+
+    def add_atom(self,atom):
+        if hasattr(atom,'name'):
+            self.atoms.append(atom)
+            self.atoms_d[atom.name] = atom
+        else :
+            try:
+                a = fATOM(atom)
+                self.atoms.append( a )
+                self.atoms_d[a.name] = a
+            except:
+                sys.stderr.write("##### Error, Error loading atom %s"%atom)
+                
 
     def find_atoms(self, name = None , index = None ):
         result = list()
