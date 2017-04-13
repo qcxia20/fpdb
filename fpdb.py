@@ -150,7 +150,7 @@ class fCHEMO():
             self.insertion = resi_lines[0][26]
         except:
             self.name = "UND"
-            self.index = "0"
+            self.index = 0
             self.chain = " "
             self.insertion = " "
 
