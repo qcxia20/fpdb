@@ -245,6 +245,39 @@ class fCHEMO():
             print atom.name,
         print
 
+    def find_h(self):
+        h_list = list()
+        for atom in self.atoms:
+            if atom.element == 'H':
+                h_list.append(atom)
+        return h_list
+
+    def _find_bond_atoms(self,atom,cutoff):
+        cutoff_2 = cutoff ** 2
+        a_list = list()
+        for a in self.atoms:
+            if a in self.atoms:
+                continue
+            if dist_2(atom,a) < cutoff_2:
+                a_list.append(a)
+        return a_list
+
+    def find_polar_h(self):
+        polar_h_list = list()
+        for atom in self.h_list():
+            for a in self._find_bond_atoms(atom, 1.2): # bond length with H is usually < 1.0 A
+                if a.element in ("N","O","S"): # currently only take O,N and S into account.
+                    polar_h_list.append(atom)
+        return polar_h_list
+
+    def find_hbond_acceptor(self):
+        l = list()
+        for atom in self.atoms:
+            if  atom.element in ("N","O"):
+                l.append(atom)
+        return l
+                    
+
 class fRESIDUE(fCHEMO):
     pass
 
