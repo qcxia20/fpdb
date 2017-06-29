@@ -3,6 +3,17 @@ import math
 #import simtk.openmm.app as soa
 #import simtk.unit as su
 import sys,os
+import numpy as np
+
+MASS =    {'O':15.999,  'N':14.010,
+           'C':12.010,  'H': 1.008,
+           'F':19.000,
+           'Na':22.99,  'NA':22.99,
+           'P':30.970,  'S':32.060,
+           'Cl':35.45,  'CL':35.45,
+           'Br':79.90,  'BR':79.90,
+           'CU':63.55,
+           }
 
 MAX = 99999
 TMPFILE = "FPDB.SOA.TMPPDBFILE.PDB"
@@ -171,6 +182,10 @@ class fCHEMO():
         self.var1 = None
         self.var2 = None
         self.var3 = None
+    def getCOM(self):
+        mass = np.array([MASS[i.element] for i in self.atoms])
+        coors = np.array([i.posi for i in self.atoms])
+        return np.dot(mass, coors) / sum(mass)
 
     def add_atom(self,atom):
         if hasattr(atom,'name'):
@@ -556,27 +571,34 @@ class fPDB:
     @staticmethod
     def load_ff_param_resi(resi,gmxtop):
         resi_atoms = set( [ x.name for x in resi.atoms ] )
-        for gmx_resi in gmxtop.get_resilist():
-            gmx_atoms = set([ x[0] for x in gmxtop.get_resi(gmx_resi) ] )
-            if resi_atoms == gmx_atoms:
+        gmx_resi_set = set(gmxtop.get_resilist())
+        gmx_atoms = None
+        if resi.name in gmx_resi_set:
+            gmx_atoms = { x[0]:x for x in gmxtop.get_resi(resi.name)  }
+        else:
+            for gmx_resi in gmx_resi_set:
+                gmx_atoms = { x[0]:x for x in gmxtop.get_resi(gmx_resi)  }
+                if resi_atoms == set(gmx_atoms.keys()):
                 # print ">>>>> Loading GMX parameters : %s"%gmx_resi
-                if resi.name != gmx_resi :
-                    pass
+                    if resi.name != gmx_resi :
+                        pass
                     # print "===== Warning : different residue names while loading parameters %s and %s"%(resi.name,gmx_resi)
-                for atom in resi.atoms:
-                    for gmx_atom in gmxtop.get_resi(gmx_resi):
-                        if atom.name == gmx_atom[0]:
-                            atom.addparm( gmx_atom[3],gmx_atom[1],gmx_atom[2] )
-                return 
+        if gmx_atoms is not None:
+            #print(resi_atoms)
+            #print(gmx_atoms.keys())
+            for atom in resi.atoms:
+                gmx_atom = gmx_atoms[atom.name]
+                atom.addparm( gmx_atom[3],gmx_atom[1],gmx_atom[2] )
+            return 
         for gmx_resi in gmxtop.get_resilist_amber():
             gmx_atoms = set( [ x[0] for x in gmxtop.get_resi_amber(gmx_resi) ] )
 
             if resi_atoms == gmx_atoms:
                 pass
-                # print ">>>>> Loading AMBER parameters : %s"%gmx_resi
+                print ">>>>> Loading AMBER parameters : %s"%gmx_resi
                 if resi.name != gmx_resi :
                     pass
-                    # print "##### Warning : Different residue names while loading parameters %s and %s"%(resi.name,gmx_resi)
+                    print "##### Warning : Different residue names while loading parameters %s and %s"%(resi.name,gmx_resi)
                 for atom in resi.atoms:
                     for gmx_atom in gmxtop.get_resi_amber(gmx_resi):
                         if atom.name == gmx_atom[0]:
@@ -686,6 +708,35 @@ def calc_chg(a,b,dist_2):
     charge2 = b.charge
     return 138.935485*charge1*charge2/(math.sqrt(dist_2)/10.)
 
+###### Function to compute vdw
+def atomicEF(a,b):
+    k = 138.935485
+    sig1,eps1=a.sig,a.eps
+    sig2,eps2=b.sig,b.eps
+    sig = 0.5 * ( sig1 + sig2 )
+    sig = sig * sig
+    sig6 = sig ** 3
+    sig12 = sig6 * sig6
+    eps = np.sqrt(eps1*eps2)
+    x0 = np.array(a.posi)
+    x1 = np.array(b.posi)
+    x0 /= 10
+    x1 /= 10
+    r2 = sum((x1-x0)**2)
+    r = np.sqrt(r2)
+    r6 = r2**3
+    r8 = r6 * r2
+    r12 = r6 * r6
+    r14 = r12 * r2
+    Evdw = 4 * eps * (sig12/r12 - sig6/r6)
+    Fvdw = 24 * eps * (sig6/r8 - 2*sig12/r14) * (x1-x0)
+    chg1 = a.charge
+    chg2 = b.charge
+    Eelec = k*chg1*chg2/r
+    Felec = k*chg1*chg2*(x1-x0)/(r*r2)
+    return (Evdw + Eelec)*kJ_to_kcal, (Fvdw + Felec)*kJ_to_kcal/10 # to A
+
+
 ###### dist_2 atom atom
 def dist_2(a,b):
     if hasattr(a,'posi'):
@@ -758,6 +809,24 @@ def potential_resi( resia,resib ):
             vdw += v
             chg += c 
     return vdw, chg
+
+def resiEFT( resia,resib ):
+    if resia == resib:
+        # sys.stderr.write("WARNING, YOU ARE ATTEMPING TO COMPUTE THE POTENTIAL BETWEEN IDENTICAL RESIDUES. THE FUNCTION WILL IGNORE IT AND RETURN ZERO.\n")
+        return 0,0,0
+    com1 = resib.getCOM() # not finish !!! jc
+    E = 0
+    F = np.zeros(3)
+    T = np.zeros(3)
+    for atoma in resia.atoms:
+        for atomb in resib.atoms:
+            e, f = atomicEF(atoma,atomb)
+            E += e
+            #f = -f # get negative for grid database. jc
+            F += f # force a --> b
+            x = (np.array(atomb.posi) - com1) # A
+            T += np.cross(x, f)
+    return E, F, T
 
 def next_frame(filename):
     frame = list()
