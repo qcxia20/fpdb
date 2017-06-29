@@ -8,6 +8,8 @@ MAX = 99999
 TMPFILE = "FPDB.SOA.TMPPDBFILE.PDB"
 kJ_to_kcal = 1/4.184
 BIG_NUM = 1.e10
+HBOND_DISTANCE_CUTOFF = 3.5  # angstron
+HBOND_ANGLE_CUTOFF = 0.666667*math.pi # pi
 
 if True: ### residue names 
     standard_protein_residues = ('ARG','LYS','HIS','HIP','HIE',
@@ -256,7 +258,7 @@ class fCHEMO():
         cutoff_2 = cutoff ** 2
         a_list = list()
         for a in self.atoms:
-            if a in self.atoms:
+            if a == atom:
                 continue
             if dist_2(atom,a) < cutoff_2:
                 a_list.append(a)
@@ -264,7 +266,7 @@ class fCHEMO():
 
     def find_polar_h(self):
         polar_h_list = list()
-        for atom in self.h_list():
+        for atom in self.find_h():
             for a in self._find_bond_atoms(atom, 1.2): # bond length with H is usually < 1.0 A
                 if a.element in ("N","O","S"): # currently only take O,N and S into account.
                     polar_h_list.append(atom)
@@ -276,7 +278,34 @@ class fCHEMO():
             if  atom.element in ("N","O"):
                 l.append(atom)
         return l
-                    
+
+    def find_hbond_donar(self):
+        donar = list()
+        for atom in self.find_h():
+            for a in self._find_bond_atoms(atom, 1.2): # bond length with H is usually < 1.0 A
+                if a.element in ("N","O","S"): # currently only take O,N and S into account.
+                    donar.append( (a,atom) )
+        return donar
+
+    def find_hbond(self,resi): ## use three 
+        if not hasattr(resi,'atoms'):
+            print "##### Error. Currently the only usage of find_h_bond() is : self.find_h_bond( another_residue ). Will stop "
+            sys.exit()
+        if self == resi:
+            print "##### Warning: find hbond between identical residues. Will return empty list."
+            return list(),list()
+
+        as_donar = list()
+        for d,h in self.find_hbond_donar():
+            for a in resi.find_hbond_acceptor():
+                if fHbond.is_hydrogen_bond(d,h,a):
+                    as_donar.append( fHbond(d,h,a) )
+        as_acceptor = list()
+        for a in self.find_hbond_acceptor():
+            for d,h in resi.find_hbond_donar():
+                if fHbond.is_hydrogen_bond(d,h,a):
+                    as_acceptor.append( fHbond(d,h,a) )
+        return as_donar,as_acceptor
 
 class fRESIDUE(fCHEMO):
     pass
@@ -286,6 +315,31 @@ class fRING(fCHEMO):
         fCHEMO.__init__(self,[])
         for atom in atom_list:
             self.atom.append(atom)
+
+class fHbond(fCHEMO):
+    def __init__(self,d,h,a):
+        fCHEMO.__init__(self)
+        self.add_atom(d)
+        self.add_atom(h)
+        self.add_atom(a)
+        self.d = d
+        self.h = h
+        self.a = a
+        self.angle = angle(d,h,a)
+        self.dist = dist(d,a)
+        if self.angle  < HBOND_ANGLE_CUTOFF:
+            sys.stderr.write( "##### Warning ! You registed a hydrogen bond, but angle(d,h,a) is smaller than HBOND_ANGLE_CUTOFF(%f)\n"%HBOND_ANGLE_CUTOFF )
+        if self.dist  > HBOND_DISTANCE_CUTOFF:
+            sys.stderr.write( "##### Warning ! You registed a hydrogen bond, but dist(d,a) is larger than HBOND_DISTANCE_CUTOFF(%f)\n"%HBOND_DISTANCE_CUTOFF )
+
+    @staticmethod
+    def is_hydrogen_bond(d,h,a):
+        tmp_angle = angle(d,h,a)
+        tmp_dist = dist(d,a)
+        if tmp_angle >=  HBOND_ANGLE_CUTOFF and tmp_dist <= HBOND_DISTANCE_CUTOFF:
+            return True
+        else:
+            return False
 
 class fBOND:
     def __init__(self,atoma,atomb):
@@ -588,6 +642,32 @@ class fPDB:
         if flag_is_str:
             ofp.close()
 
+    def optimize_lys_H(self):
+        """ A specified method for proprocessing SPA graphic.pdb, fix three hydrogen postion on LYS NZ"""
+        R_HN = 1.0
+        for resi in self.topology.find_residues(name = ("LYS",) ):
+            ce = resi.atoms_d['CE']
+            nz = resi.atoms_d['NZ']
+            h1 = resi.atoms_d['HZ1']
+            h2 = resi.atoms_d['HZ2']
+            h3 = resi.atoms_d['HZ3']
+            r_tmp = dist(ce,nz)
+            x = (nz.posi[0] - ce.posi[0])/r_tmp*R_HN
+            y = (nz.posi[1] - ce.posi[1])/r_tmp*R_HN
+            z = (nz.posi[2] - ce.posi[2])/r_tmp*R_HN
+            import frotate 
+            matrix1 = frotate.build_matrix(h2.posi,h3.posi,-1.318)
+            newcoord1 = frotate.rotate_atom( (x,y,z),(0,0,0),matrix1 )
+            matrix2 = frotate.build_matrix(h3.posi,h1.posi,-1.318)
+            newcoord2 = frotate.rotate_atom( (x,y,z),(0,0,0),matrix2 )
+            matrix3 = frotate.build_matrix(h1.posi,h2.posi,-1.318)
+            newcoord3 = frotate.rotate_atom( (x,y,z),(0,0,0),matrix3 )
+            for i in (0,1,2):
+                h1.posi[i] = newcoord1[i] + nz.posi[i]
+                h2.posi[i] = newcoord2[i] + nz.posi[i]
+                h3.posi[i] = newcoord3[i] + nz.posi[i]
+            
+
 ###### Function to compute vdw
 def calc_vdw(a,b,dist_2):
     sig1,eps1=a.sig,a.eps
@@ -691,6 +771,7 @@ def next_frame(filename):
             frame = list()
         else:
             frame.append(line)
+
 
 if False:
     def dist_atom(a,b):
