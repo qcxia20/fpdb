@@ -733,7 +733,7 @@ def atomicEF(a,b):
     chg1 = a.charge
     chg2 = b.charge
     Eelec = k*chg1*chg2/r
-    Felec = k*chg1*chg2*(x1-x0)/(r*r2)
+    Felec = - k*chg1*chg2*(x1-x0)/(r*r2)
     return (Evdw + Eelec)*kJ_to_kcal, (Fvdw + Felec)*kJ_to_kcal/10 # to A
 
 
