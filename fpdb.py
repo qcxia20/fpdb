@@ -829,14 +829,17 @@ def resiEFT( resia,resib ):
     return E, F, T
 
 def next_frame(filename):
+    just_yield = True
     frame = list()
     for line in open(filename):
-        if len(line)>=6 and line[:6] == "MODEL ":
+        if just_yield : # or ( len(line)>=6 and line[:6] in ("MODEL ","TITLE ") ):
             frame = list()
             frame.append(line)
-        elif len(line)>=6 and line[:3] == "END":
+            just_yield = False
+        elif len(line)>=3 and line[:3] == "END":
             frame.append(line)
             yield frame
+            just_yield = True
             frame = list()
         else:
             frame.append(line)
