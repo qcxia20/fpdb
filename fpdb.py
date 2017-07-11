@@ -85,7 +85,7 @@ if True: ### residue names
                'val'.upper() : 'V' ,
     }
     three_letter_code = dict()
-    for key,value in one_letter_code.iteritems():
+    for key,value in one_letter_code.items():
         three_letter_code[value] = key
 
 
@@ -254,13 +254,13 @@ class fCHEMO():
             ofp.close()
 
     def debug(self):
-        print 'name',self.name
-        print 'index',self.index
-        print 'insertion',self.insertion
-        print 'atoms:'
+        print('name',self.name)
+        print('index',self.index)
+        print('insertion',self.insertion)
+        print('atoms:')
         for atom in self.atoms:
-            print atom.name,
-        print
+            print(atom.name,)
+        print()
 
     def find_h(self):
         h_list = list()
@@ -304,10 +304,10 @@ class fCHEMO():
 
     def find_hbond(self,resi): ## use three 
         if not hasattr(resi,'atoms'):
-            print "##### Error. Currently the only usage of find_h_bond() is : self.find_h_bond( another_residue ). Will stop "
+            print("##### Error. Currently the only usage of find_h_bond() is : self.find_h_bond( another_residue ). Will stop ")
             sys.exit()
         if self == resi:
-            print "##### Warning: find hbond between identical residues. Will return empty list."
+            print("##### Warning: find hbond between identical residues. Will return empty list.")
             return list(),list()
 
         as_donar = list()
@@ -458,20 +458,20 @@ class fCOMPOUND(fCHEMO):
         os.remove(TMPFILE)
     def list_connect_count(self):
         for atom in self.atoms:
-            print atom.name,atom.connect_count
+            print(atom.name,atom.connect_count)
     def debug(self):
         fCHEMO.debug(self)
-        print "Hydrogen atoms:"
+        print("Hydrogen atoms:")
         for h in self.h_list:
-            print h.name,
-        print "Heavy atoms:"
+            print(h.name)
+        print("Heavy atoms:")
         for heavy in self.heavy_list:
-            print heavy.name,
-        print "Num of Bonds:",len(self.bonds)
-        print "Atom index:"
+            print(heavy.name)
+        print("Num of Bonds:",len(self.bonds))
+        print("Atom index:")
         for atom in self.atoms:
-            print atom.index,
-        print
+            print(atom.index,)
+        print()
    
 class fTOPOLOGY():
     @staticmethod
@@ -579,10 +579,10 @@ class fPDB:
             for gmx_resi in gmx_resi_set:
                 gmx_atoms = { x[0]:x for x in gmxtop.get_resi(gmx_resi)  }
                 if resi_atoms == set(gmx_atoms.keys()):
-                # print ">>>>> Loading GMX parameters : %s"%gmx_resi
+                # print(>>>>> Loading GMX parameters : %s"%gmx_resi)
                     if resi.name != gmx_resi :
                         pass
-                    # print "===== Warning : different residue names while loading parameters %s and %s"%(resi.name,gmx_resi)
+                    # print("===== Warning : different residue names while loading parameters %s and %s"%(resi.name,gmx_resi))
         if gmx_atoms is not None:
             #print(resi_atoms)
             #print(gmx_atoms.keys())
@@ -595,19 +595,19 @@ class fPDB:
 
             if resi_atoms == gmx_atoms:
                 pass
-                print ">>>>> Loading AMBER parameters : %s"%gmx_resi
+                print(">>>>> Loading AMBER parameters : %s"%gmx_resi)
                 if resi.name != gmx_resi :
                     pass
-                    print "##### Warning : Different residue names while loading parameters %s and %s"%(resi.name,gmx_resi)
+                    print("##### Warning : Different residue names while loading parameters %s and %s"%(resi.name,gmx_resi))
                 for atom in resi.atoms:
                     for gmx_atom in gmxtop.get_resi_amber(gmx_resi):
                         if atom.name == gmx_atom[0]:
                             atom.addparm( gmx_atom[3],gmx_atom[1],gmx_atom[2] )
                 return 
-        # print "##### Warning : Error in loading residue parameters ",resi.name,resi.index, " set all parameter within this residue to zero "
+        # print("##### Warning : Error in loading residue parameters ",resi.name,resi.index, " set all parameter within this residue to zero ")
         for atom in resi.atoms:
             atom.addparm(0,0,0)
-        # print "Error loading residue parameters",resi.name,resi.index
+        # print("Error loading residue parameters",resi.name,resi.index)
         return
 
     def load_ff_params(self, gmxtop ):
@@ -618,7 +618,7 @@ class fPDB:
     def check_params(self):
         for resi in self.topology.residues:
             for atom in resi.atoms:
-                print atom.name,atom.charge,atom.sig,atom.eps
+                print(atom.name,atom.charge,atom.sig,atom.eps)
 
     def find_protein_center(self):
         n = 0

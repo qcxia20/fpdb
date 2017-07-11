@@ -105,22 +105,22 @@ class gmxtop:
                         
     def debug(self):
         pass
-        # print "ATOM TYPE"
-        # print self._atomtype
-        # print "RESI TYPE"
-        print self._resitype
+        # print("ATOM TYPE")
+        # print(self._atomtype)
+        # print("RESI TYPE")
+        print(self._resitype)
         # for t in self._resitype:
-        #     print t
-        #     print self._resi[t]
-        #     # print self._resi_amber[t]
-        # print self.wildcard_types
-        # print self.gmx2amb_table
+        #     print(t)
+        #     print(self._resi[t])
+        #     # print(self._resi_amber[t])
+        # print(self.wildcard_types)
+        # print(self.gmx2amb_table)
         tmp =  self.get_amber_resi("ARG")
         for key in tmp:
-            print key
+            print(key)
         
-        # print self._resi.keys()
-        # print self._resi_amber.keys()
+        # print(self._resi.keys())
+        # print(self._resi_amber.keys())
 
     def make_gmx2amb_table(self):
         self.gmx2amb_table =  dict()
@@ -137,7 +137,7 @@ class gmxtop:
                 nameb = nameb[1:]+nameb[0]
 
             if resi != "*":
-                if self.gmx2amb_table.has_key(resi):
+                if resi in self.gmx2amb_table:
                     self.gmx2amb_table[resi][namea]=nameb
                 else:
                     self.gmx2amb_table[resi] = dict()
@@ -147,7 +147,7 @@ class gmxtop:
         pass
 
     def get_gmx2amb_name(self, resi,n ):
-        if self.wildcard_types.has_key(n):
+        if n in self.wildcard_types:
             return self.wildcard_types[n]
         else:
             try:
@@ -269,5 +269,5 @@ if __name__ == '__main__' :
     watermodel = '/opt/gromacs502/share/gromacs/top/amber99sb.ff/tip3p.itp'
     top = gmxtop(nonbonded, rtp , watermodel)
     top.debug()
-    # print top.get_resilist_amber()
+    # print(top.get_resilist_amber())
     
