@@ -118,9 +118,11 @@ class fATOM():
         self.posi = [x,y,z]
         try:
             self.bf =  float(atom_line[60:66])
-            self.occ =  float(atom_line[54:60])
         except:
             self.bf = 0
+        try:
+            self.occ =  float(atom_line[54:60])
+        except:
             self.occ = 0
         self.connect_count = 0 ## for bond
         self.bond = list()
