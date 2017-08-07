@@ -97,7 +97,6 @@ if True: ### Global varieties
 
 class fATOM():
     def __init__(self,atom_line = None):
-
         if atom_line == None:
             atom_line = "ATOM      1  X   DEF     1       0.000   0.000   0.000  1.00  0.00           X"        
 
@@ -107,6 +106,7 @@ class fATOM():
         tmpname = tmpname.strip()
         self.name = tmpname
         self.element = tmpname[0]  ### !!!! NOT FINISHED
+        self.resi_name = atom_line[17:20].strip()
         self.charge = None
         self.sig = None
         self.eps = None
