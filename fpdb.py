@@ -28,7 +28,7 @@ if True: ### residue names
          'ASN','GLN','SER','THR','CYS','CYX','GLY','PRO','ALA',
          'VAL','LEU','ILE','MET','PHE','TYR','TRP' )
 
-    standard_ion_redsidues = ('FE','MN','NI','CA','ZN','MG')
+    standard_ion_redsidues = ('FE','MN','NI','CA','ZN','MG',"CL")
     standard_water_redsidues = ('HOH','SOL','WAT')
     standard_redsidues = standard_protein_residues + standard_water_redsidues + standard_ion_redsidues
 
@@ -475,6 +475,13 @@ class fCOMPOUND(fCHEMO):
             print(atom.index,)
         print()
    
+class fCHAIN():
+    def __init__(self,chain_index = 'A'):
+        self.residues = list()
+        self.chain_name = chain_index
+    def add_resi(self,resi):
+        self.residues.append(resi)
+
 class fTOPOLOGY():
     @staticmethod
     def _next_resi_lines(lines):
@@ -501,6 +508,14 @@ class fTOPOLOGY():
         self.residues_d = dict()
         for resi in self.residues:
             self.residues_d[resi.index] = resi
+
+        self.chains = dict()
+        for resi in self.residues:
+            if resi.chain in self.chains.keys():
+                self.chains[resi.chain].add_resi(resi)
+            else:
+                self.chains[resi.chain] = fCHAIN(resi.chain)
+                self.chains[resi.chain].add_resi(resi)
 
     def get_protein_residues(self):
         prot_residues = list()
@@ -537,6 +552,7 @@ class fTOPOLOGY():
     def write_model(self,ofp):
         for residue in self.residues:
             residue.write_pdb(ofp)
+
     
 class fPDB:
     def __init__(self,frame):
