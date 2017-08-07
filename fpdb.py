@@ -30,7 +30,7 @@ if True: ### residue names
 
     standard_ion_redsidues = ('FE','MN','NI','CA','ZN','MG',"CL","NA")
     standard_water_redsidues = ('HOH','SOL','WAT')
-    standard_redsidues = standard_protein_residues + standard_water_redsidues + standard_ion_redsidues
+    standard_residues = standard_protein_residues + standard_water_redsidues + standard_ion_redsidues
 
     protein_hbond_donors = (
         ('*','N','H'),
