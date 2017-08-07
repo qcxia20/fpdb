@@ -107,6 +107,10 @@ class fATOM():
         self.name = tmpname
         self.element = tmpname[0]  ### !!!! NOT FINISHED
         self.resi_name = atom_line[17:20].strip()
+        try:
+            self.resi_index = int(atom_line[22:26])
+        except:
+            self.resi_index = 0
         self.charge = None
         self.sig = None
         self.eps = None
@@ -305,7 +309,7 @@ class fCHEMO():
         return donar
 
     def find_hbond_with(self,resi): ## use three 
-        return self.find_hbond(self,resi)
+        return self.find_hbond(resi)
 
     def find_hbond(self,resi): ## use three 
         if not hasattr(resi,'atoms'):
