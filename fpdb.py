@@ -304,6 +304,9 @@ class fCHEMO():
                     donar.append( (a,atom) )
         return donar
 
+    def find_hbond_with(self,resi): ## use three 
+        return self.find_hbond(self,resi)
+
     def find_hbond(self,resi): ## use three 
         if not hasattr(resi,'atoms'):
             print("##### Error. Currently the only usage of find_h_bond() is : self.find_h_bond( another_residue ). Will stop ")
