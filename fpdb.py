@@ -28,7 +28,7 @@ if True: ### residue names
          'ASN','GLN','SER','THR','CYS','CYX','GLY','PRO','ALA',
          'VAL','LEU','ILE','MET','PHE','TYR','TRP' )
 
-    standard_ion_redsidues = ('FE','MN','NI','CA','ZN','MG',"CL")
+    standard_ion_redsidues = ('FE','MN','NI','CA','ZN','MG',"CL","NA")
     standard_water_redsidues = ('HOH','SOL','WAT')
     standard_redsidues = standard_protein_residues + standard_water_redsidues + standard_ion_redsidues
 
