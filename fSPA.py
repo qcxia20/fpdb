@@ -22,7 +22,22 @@ class fSPA_water(fpdb.fCHEMO):
         self.trans_entropy = float(items[13])
         self.orient_entropy = float(items[14])
         self.spa_energy = float(items[15])
+        
+        ow = fpdb.fATOM()
+        ow.posi = (x,y,z)
 
+        h1 = fpdb.fATOM()
+        second_line = three_lines[1]
+        items = second_line.split()
+        h1.posi = ( float(items[1]) , float(items[2]) , float(items[3]) )
+
+        h2 = fpdb.fATOM()
+        third_line = three_lines[2]
+        items = third_line.split()
+        h2.posi = ( float(items[1]) , float(items[2]) , float(items[3]) )
+
+        self.atoms = [ow,h1,h2]
+        
 class fSPA_summary:
     @staticmethod
     def next_three_lines(summaryfile):
@@ -43,7 +58,8 @@ class fSPA_summary:
         for three_lines in fSPA_summary.next_three_lines(summaryfile):
             try:
                 water = fSPA_water(three_lines)
-            except:
+            except Exception as e:
+                print e
                 sys.stderr.write("###### Error in reading SPA summary line:\n")
                 sys.stderr.write("-----# %s"%three_lines[0])
                 continue
