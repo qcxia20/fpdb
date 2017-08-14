@@ -105,7 +105,10 @@ class fATOM():
             tmpname = tmpname[1:] + tmpname[0]
         tmpname = tmpname.strip()
         self.name = tmpname
-        self.element = tmpname[0]  ### !!!! NOT FINISHED
+        try:
+            self.element = atom_line[76:78].strip()
+        except:
+            self.element = tmpname[0]  ### !!!! NOT FINISHED
         self.resi_name = atom_line[17:20].strip()
         try:
             self.resi_index = int(atom_line[22:26])
@@ -222,17 +225,15 @@ class fCHEMO():
     def write_pdb(self,ofile):
         if hasattr(ofile,'write'):
             ofp = ofile
-            for atom in self.atoms:
-                x,y,z = atom.posi
-                line = 'ATOM  %5d %4s%1s%3s %1s%4d    %8.3f%8.3f%8.3f%6.2f%6.2f\n'%(atom.index,atom.name,atom.conf,self.name,self.chain,self.index,x,y,z,atom.occ,atom.bf)
-                ofp.write(line)
         else:
             ofp = open(ofile,'w')
-            for atom in self.atoms:
-                x,y,z = atom.posi
-                line = 'ATOM  %5d %4s %3s %1s%4d    %8.3f%8.3f%8.3f%6.2f%6.2f\n'%(atom.index,atom.name,self.name,self.chain,self.index,x,y,z,atom.occ,atom.bf)
-                ofp.write(line)
-            ofp.close()
+        for atom in self.atoms:
+            x,y,z = atom.posi
+            line = 'ATOM  %5d %4s%1s%3s %1s%4d    %8.3f%8.3f%8.3f%6.2f%6.2f%12s\n'%(
+                    atom.index,atom.name,atom.conf,self.name,self.chain,self.index,
+                    x,y,z,atom.occ,atom.bf,atom.element)
+            ofp.write(line)
+        ofp.close()
     
     def write_pdb_plop(self,ofile):
         if self.name in standard_protein_residues:
