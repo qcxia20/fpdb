@@ -106,8 +106,12 @@ class fATOM():
         tmpname = tmpname.strip()
         self.name = tmpname
         try:
-            self.element = atom_line[76:78].strip()
+            if len(atom_line)>=78:
+                self.element = atom_line[76:78].strip()
+            else:
+                self.element = tmpname[0]
         except:
+            print "DEBUG",tmpname
             self.element = tmpname[0]  ### !!!! NOT FINISHED
         self.resi_name = atom_line[17:20].strip()
         try:
@@ -274,6 +278,7 @@ class fCHEMO():
         for atom in self.atoms:
             if atom.element == 'H':
                 h_list.append(atom)
+        #print "DEBUG:",h_list
         return h_list
 
     def _find_bond_atoms(self,atom,cutoff):
@@ -307,6 +312,7 @@ class fCHEMO():
             for a in self._find_bond_atoms(atom, 1.2): # bond length with H is usually < 1.0 A
                 if a.element in ("N","O","S"): # currently only take O,N and S into account.
                     donar.append( (a,atom) )
+        
         return donar
 
     def find_hbond_with(self,resi): ## use three 
