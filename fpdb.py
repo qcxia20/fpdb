@@ -237,7 +237,6 @@ class fCHEMO():
                     atom.index,atom.name,atom.conf,self.name,self.chain,self.index,
                     x,y,z,atom.occ,atom.bf,atom.element)
             ofp.write(line)
-        ofp.close()
     
     def write_pdb_plop(self,ofile):
         if self.name in standard_protein_residues:
@@ -721,7 +720,6 @@ class fPDB:
                 h2.posi[i] = newcoord2[i] + nz.posi[i]
                 h3.posi[i] = newcoord3[i] + nz.posi[i]
             
-
 ###### Function to compute vdw
 def calc_vdw(a,b,dist_2):
     sig1,eps1=a.sig,a.eps
@@ -822,6 +820,28 @@ def angle( a1,b,a2):
     cos_angle = ( - dist_a1_a2_2 + dist_a1_b**2 + dist_a2_b**2 )/( 2*dist_a1_b*dist_a2_b )
     angle = math.acos(cos_angle)
     return angle
+
+def dihedral(a1,b1,b2,a2):
+    "Method at https://math.stackexchange.com/questions/47059/how-do-i-calculate-a-dihedral-angle-given-cartesian-coordinates"
+    
+    vector_b1 = (np.array( b1.posi ) - np.array( a1.posi ))[:3]
+    vector_b2 = (np.array( b2.posi ) - np.array( b1.posi ))[:3]
+    vector_b3 = (np.array( a2.posi ) - np.array( b2.posi ))[:3]
+
+    mod_b2 = np.sqrt( vector_b2.dot(vector_b2) )
+    unit_b2 = vector_b2/mod_b2
+
+    vector_n1 = np.cross(vector_b1,vector_b2)
+    vector_n2 = np.cross(vector_b2,vector_b3)
+    
+    vector_m1 = np.cross( vector_n1, unit_b2 )
+
+    x = vector_n1.dot(vector_n2)
+    y = vector_m1.dot(vector_n2)
+    
+    angle = math.atan2(y,x)
+    return angle
+    
 
 def potential_atom_atom( atoma,atomb ):
     d_2 = dist_2(atoma,atomb)
