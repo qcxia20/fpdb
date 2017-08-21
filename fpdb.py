@@ -238,14 +238,23 @@ class fCHEMO():
                     x,y,z,atom.occ,atom.bf,atom.element)
             ofp.write(line)
     
-    def write_pdb_plop(self,ofile):
+    def write_pdb_plop(self,ofile=None):
         if self.name in standard_protein_residues:
-            atomline='ATOM  %5d %4s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n'
+            atomline='ATOM  %5d  %-3s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n'
         else:
-            atomline='HETATM%5d %4s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n'
+            atomline='HETATM%5d  %-3s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n'
         if self.name in standard_ion_redsidues:
             atomline='HETATM%5d %-4s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n'
-        if hasattr(ofile,'write'):
+        if ofile is None:
+            ofp = str()
+            if self.name not in standard_protein_residues: ofp +='TER\n'
+            for atom in self.atoms:
+                x,y,z = atom.posi
+                line = atomline%(atom.index,atom.name,atom.conf,self.name,self.chain,self.index,x,y,z)
+                ofp += line
+            if self.name not in standard_protein_residues: ofp +='TER\n'
+            return ofp
+        elif hasattr(ofile,'write'):
             ofp = ofile
             if self.name not in standard_protein_residues:ofp.write('TER\n')
             for atom in self.atoms:
