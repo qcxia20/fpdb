@@ -22,6 +22,9 @@ BIG_NUM = 1.e10
 HBOND_DISTANCE_CUTOFF = 3.5  # angstron
 HBOND_ANGLE_CUTOFF = 0.666667*math.pi # pi
 
+PROGS = { "I-interpret":"/home/fuqy/Software/I-interpret/bin/I-interpret" ,
+        }
+
 if True: ### residue names 
     standard_protein_residues = ('ARG','LYS','HIS','HIP','HIE',
          'HID','ASP','GLU',
@@ -166,6 +169,45 @@ class fCHEMO():
         for atom_line in resi_lines:
             if len(atom_line)>=6 and atom_line[:6] in ('HETATM','ATOM  '):
                 yield atom_line
+
+    ### Did not finished !
+    def addH(self,keep_current = False,nc = 0 ):
+        sys.stderr.write("##### FPDB WARNING: Currently, using fCHEMO.addH will removes the names/indexes of the exist atoms !!\n")
+        parameter_text = '''
+                       SP1_CUTOFF_ANGLE = 155.0
+                       SP2_CUTOFF_ANGLE = 115.0
+                      TORSION_RING_FIVE = 7.5
+                       TORSION_RING_SIX = 15.0
+                     FLAT_TORSION_ANGLE = 30.0
+
+                       CHARGED_CARBOXYL = YES
+                     ALIPHATIC_NITROGEN = YES
+                    CHARGED_GUANIDINIUM = YES
+                   ODD_RING_AROMATICITY = YES
+                   CONVERT_DATIVE_BONDS = YES
+
+                   LARGEST_SUBSTRUCTURE = NO
+                     ADD_HYDROGEN_ATOMS = YES
+                  HEAVY_ATOM_STATISTICS = NO
+        '''
+        ofp = open("parameter.txt",'w')
+        ofp.write(parameter_text)
+        ofp.close()
+        ofp = open("FPDB_TMPLIG.pdb",'w')
+        self.write_pdb(ofp)
+        ofp.close()
+        os.system("%s FPDB_TMPLIG.pdb FPDB_OUTLIG.pdb"%PROGS["I-interpret"])
+        os.system("rm FPDB_TMPLIG.pdb parameter.txt")
+        lines = list()
+        for line in open("FPDB_OUTLIG.pdb"):
+            if len(line)>=6 and line[:6] in ("HETATM","ATOM  "):
+                lines.append(line)
+        self.__init__(resi_lines = lines)
+
+    def generate_OPLS_parameters(nc = 0, version = '2005'):
+        self.addH(self,keep_current = False,nc = nc)
+        pass
+
     def __init__(self,resi_lines=None):
         if resi_lines == None:
             resi_lines = list()
