@@ -23,6 +23,9 @@ HBOND_DISTANCE_CUTOFF = 3.5  # angstron
 HBOND_ANGLE_CUTOFF = 0.666667*math.pi # pi
 
 PROGS = { "I-interpret":"/home/fuqy/Software/I-interpret/bin/I-interpret" ,
+          "pdbconvert":"/opt/schrodinger2016-2/utilities/pdbconvert",
+          "hetgrp_ffgen":"/opt/schrodinger2016-2/utilities/hetgrp_ffgen",
+          "opls_to_gmx":"~/.ffallrain/opls2005_to_gmx.py",
         }
 
 if True: ### residue names 
@@ -202,11 +205,38 @@ class fCHEMO():
         for line in open("FPDB_OUTLIG.pdb"):
             if len(line)>=6 and line[:6] in ("HETATM","ATOM  "):
                 lines.append(line)
-        self.__init__(resi_lines = lines)
+        self._update(resi_lines = lines)
 
-    def generate_OPLS_parameters(nc = 0, version = '2005'):
-        self.addH(self,keep_current = False,nc = nc)
-        pass
+    def _update(self,resi_lines):
+        for line in resi_lines:
+            H_index = 1
+            tmp_atom = fATOM(line)
+            exist_flag = False
+            for atom in self.atoms:
+                if dist_2(atom,tmp_atom)<0.1:
+                    exist_flag = True
+                    break
+            if exist_flag:
+                pass
+            else:
+                name = "H%-2d"%H_index
+                while ( name in self.atoms_d.keys() ):
+                    H_index += 1
+                    name = "H%-2d"%H_index
+                tmp_atom.name = name
+                self.atoms.append(tmp_atom)
+                self.atoms_d[name] = tmp_atom
+
+    def generate_OPLS_parameters(self, nc = 0, version = '2005'):
+        self.addH( keep_current = False,nc = nc)
+        resname = self.name.lower()
+        self.write_pdb("%s.pdb"%resname)
+        os.system("%s -ipdb %s.pdb -omae %s.mae"%(PROGS['pdbconvert'],resname,resname))
+        os.system("%s %s %s.mae"%(PROGS['hetgrp_ffgen'],version,resname))
+        os.system("%s -f %s.pdb -o %s.top -p %s"%(PROGS['opls_to_gmx'],resname,resname,resname)) 
+        os.system("mkdir %s_paramter"%resname)
+        os.system("mv %s %s.mae %s.pdb %s.top %s_nb.itp %s_paramter/"%(resname,resname,resname,resname,resname,resname))
+        sys.stdout.write(">>>>> FPDB, parameters of compound %s generated. \n"%resname)
 
     def __init__(self,resi_lines=None):
         if resi_lines == None:
@@ -237,6 +267,7 @@ class fCHEMO():
         self.var1 = None
         self.var2 = None
         self.var3 = None
+
     def getCOM(self):
         mass = np.array([MASS[i.element] for i in self.atoms])
         coors = np.array([i.posi for i in self.atoms])
@@ -254,7 +285,6 @@ class fCHEMO():
             except:
                 sys.stderr.write("##### Error, Error loading atom %s"%atom)
                 
-
     def find_atoms(self, name = None , index = None ):
         result = list()
         ignore_name = False
@@ -268,6 +298,7 @@ class fCHEMO():
                 if ignore_index or atom.index in index:
                         result.append(atom)
         return result
+
     def write_pdb(self,ofile):
         if hasattr(ofile,'write'):
             ofp = ofile
@@ -275,8 +306,15 @@ class fCHEMO():
             ofp = open(ofile,'w')
         for atom in self.atoms:
             x,y,z = atom.posi
+            
+            tmpname = atom.name
+            if len(tmpname) == 4:
+                tmpname = tmpname[-1]+tmpname[:-1]
+            else:
+                tmpname = " "+tmpname+" "*(3-len(tmpname))
+    
             line = 'ATOM  %5d %4s%1s%3s %1s%4d    %8.3f%8.3f%8.3f%6.2f%6.2f%12s\n'%(
-                    atom.index,atom.name,atom.conf,self.name,self.chain,self.index,
+                    atom.index,tmpname,atom.conf,self.name,self.chain,self.index,
                     x,y,z,atom.occ,atom.bf,atom.element)
             ofp.write(line)
     
