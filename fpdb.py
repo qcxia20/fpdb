@@ -14,6 +14,15 @@ MASS =    {'O':15.999,  'N':14.010,
            'Br':79.90,  'BR':79.90,
            'CU':63.55,
            }
+ATOM_NUM = {'O': 8,   'N': 7,
+            'C': 6,   'H': 1,
+            'F': 9,
+            'Na':11,  'NA':11,
+            'P':15,   'S':16,
+            'Cl':17,  'CL':17,
+            'Br':35,  'BR':35,
+            'CU':29,
+            }
 
 MAX = 99999
 TMPFILE = "FPDB.SOA.TMPPDBFILE.PDB"
@@ -110,6 +119,7 @@ class fATOM():
                 self.element = atom_line[76:78].strip()
             else:
                 self.element = tmpname[0]
+            self.atom_num = ATOM_NUM[self.element]
         except:
             print("DEBUG",tmpname)
             self.element = tmpname[0]  ### !!!! NOT FINISHED
