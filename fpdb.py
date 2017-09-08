@@ -280,8 +280,15 @@ class fCHEMO():
 
     def getCOM(self):
         mass = np.array([MASS[i.element] for i in self.atoms])
-        coors = np.array([i.posi for i in self.atoms])
+        coors = self.getxyzs
         return np.dot(mass, coors) / sum(mass)
+
+    def getxyzs(self):
+      return np.array([i.posi for i in self.atoms])
+
+    def updatexyzs(self, xyzs):
+      for i, xyz in zip(self.atoms, xyzs):
+        i.posi = xyz 
 
     def add_atom(self,atom):
         if hasattr(atom,'name'):
