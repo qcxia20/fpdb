@@ -115,7 +115,8 @@ class gmxtop:
         #     # print(self._resi_amber[t])
         # print(self.wildcard_types)
         # print(self.gmx2amb_table)
-        tmp =  self.get_amber_resi("ARG")
+        print "HID"
+        tmp =  self.get_resi("HID")
         for key in tmp:
             print(key)
         
@@ -264,9 +265,9 @@ class gmxtop:
           *:  H3: H3  ''' 
 
 if __name__ == '__main__' :
-    nonbonded = '/opt/gromacs502/share/gromacs/top/amber99sb.ff/ffnonbonded.itp'
-    rtp = '/opt/gromacs502/share/gromacs/top/amber99sb.ff/aminoacids.rtp'
-    watermodel = '/opt/gromacs502/share/gromacs/top/amber99sb.ff/tip3p.itp'
+    nonbonded = '/home/fuqy/Software/gromacs-5.1.4/share/top/amber99sb.ff/ffnonbonded.itp'
+    rtp = '/home/fuqy/Software/gromacs-5.1.4/share/top/amber99sb.ff/aminoacids.rtp'
+    watermodel = '/home/fuqy/Software/gromacs-5.1.4/share/top/amber99sb.ff/tip3p.itp'
     top = gmxtop(nonbonded, rtp , watermodel)
     top.debug()
     # print(top.get_resilist_amber())

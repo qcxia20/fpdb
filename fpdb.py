@@ -35,8 +35,8 @@ if True: ### residue names
          'VAL','LEU','ILE','MET','PHE','TYR','TRP' )
 
     standard_ion_redsidues = ('FE','MN','NI','CA','ZN','MG',"CL","NA")
-    standard_water_redsidues = ('HOH','SOL','WAT')
-    standard_residues = standard_protein_residues + standard_water_redsidues + standard_ion_redsidues
+    standard_water_residues = ('HOH','SOL','WAT')
+    standard_residues = standard_protein_residues + standard_water_residues + standard_ion_redsidues
 
     protein_hbond_donors = (
         ('*','N','H'),
@@ -206,6 +206,8 @@ class fCHEMO():
             if len(line)>=6 and line[:6] in ("HETATM","ATOM  "):
                 lines.append(line)
         self._update(resi_lines = lines)
+        for atom in self.atoms:
+            atom.conf = ' '
 
     def _update(self,resi_lines):
         for line in resi_lines:
@@ -629,7 +631,7 @@ class fTOPOLOGY():
     def get_water_residues(self):
         water_residues = list()
         for resi in self.residues:
-            if resi.name in standard_water_redsidues:
+            if resi.name in standard_water_residues:
                 water_residues.append(resi)
         return water_residues
 
@@ -693,38 +695,52 @@ class fPDB:
         resi_atoms = set( [ x.name for x in resi.atoms ] )
         gmx_resi_set = set(gmxtop.get_resilist())
         gmx_atoms = None
-        if resi.name in gmx_resi_set:
-            gmx_atoms = { x[0]:x for x in gmxtop.get_resi(resi.name)  }
+
+        if resi.name in standard_water_residues:
+            tmpname = 'HOH'
         else:
+            tmpname = resi.name
+            
+        if tmpname in gmx_resi_set:
+            _ = { x[0]:x for x in gmxtop.get_resi(tmpname) }
+            if resi_atoms == set(_.keys()):
+                gmx_atoms = _
+            else:
+                gmx_atoms = None
+        
+        if gmx_atoms == None:
             for gmx_resi in gmx_resi_set:
-                gmx_atoms = { x[0]:x for x in gmxtop.get_resi(gmx_resi)  }
-                if resi_atoms == set(gmx_atoms.keys()):
-                # print(>>>>> Loading GMX parameters : %s"%gmx_resi)
-                    if resi.name != gmx_resi :
+                _ = { x[0]:x for x in gmxtop.get_resi(gmx_resi)  }
+                if resi_atoms == set(_.keys()):
+                    # print(>>>>> Loading GMX parameters : %s"%gmx_resi)
+                    if tmpname != gmx_resi :
+                        gmx_atoms = _
                         pass
-                    # print("===== Warning : different residue names while loading parameters %s and %s"%(resi.name,gmx_resi))
+                        if tmpname != 'HOH':
+                            sys.stderr.write("===== Warning : different residue names while loading parameters %s ( parameters: %s).\n"%(tmpname,gmx_resi))
+
         if gmx_atoms is not None:
-            #print(resi_atoms)
-            #print(gmx_atoms.keys())
             for atom in resi.atoms:
                 gmx_atom = gmx_atoms[atom.name]
                 atom.addparm( gmx_atom[3],gmx_atom[1],gmx_atom[2] )
             return 
-        for gmx_resi in gmxtop.get_resilist_amber():
-            gmx_atoms = set( [ x[0] for x in gmxtop.get_resi_amber(gmx_resi) ] )
 
-            if resi_atoms == gmx_atoms:
-                pass
-                print(">>>>> Loading AMBER parameters : %s"%gmx_resi)
-                if resi.name != gmx_resi :
-                    pass
-                    print("##### Warning : Different residue names while loading parameters %s and %s"%(resi.name,gmx_resi))
-                for atom in resi.atoms:
-                    for gmx_atom in gmxtop.get_resi_amber(gmx_resi):
-                        if atom.name == gmx_atom[0]:
-                            atom.addparm( gmx_atom[3],gmx_atom[1],gmx_atom[2] )
-                return 
-        # print("##### Warning : Error in loading residue parameters ",resi.name,resi.index, " set all parameter within this residue to zero ")
+        # for gmx_resi in gmxtop.get_resilist_amber():
+        #     gmx_atoms = set( [ x[0] for x in gmxtop.get_resi_amber(gmx_resi) ] )
+
+        #     if resi_atoms == gmx_atoms:
+        #         pass
+        #         print(">>>>> Loading AMBER parameters : %s"%gmx_resi)
+        #         if resi.name != gmx_resi :
+        #             pass
+        #             print("##### Warning : Different residue names while loading parameters %s and %s"%(resi.name,gmx_resi))
+        #         for atom in resi.atoms:
+        #             for gmx_atom in gmxtop.get_resi_amber(gmx_resi):
+        #                 if atom.name == gmx_atom[0]:
+        #                     atom.addparm( gmx_atom[3],gmx_atom[1],gmx_atom[2] )
+        #         return 
+
+        print("##### Warning : Error in loading residue parameters ",resi.name,resi.index, " set all parameter within this residue to zero ")
         for atom in resi.atoms:
             atom.addparm(0,0,0)
         # print("Error loading residue parameters",resi.name,resi.index)
