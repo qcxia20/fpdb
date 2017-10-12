@@ -22,6 +22,7 @@ ATOM_NUM = {'O': 8,   'N': 7,
             'Cl':17,  'CL':17,
             'Br':35,  'BR':35,
             'CU':29,
+            'X':999
             }
 
 MAX = 99999
@@ -507,6 +508,25 @@ class fCHEMO():
                 if fHbond.is_hydrogen_bond(d,h,a):
                     as_acceptor.append( fHbond(d,h,a) )
         return as_donar,as_acceptor
+
+class fSDF_MOL(fCHEMO):
+    def __init__(self, sdf_frame):
+        fCHEMO.__init__(self)
+        n_atom = int(sdf_frame[3].split()[0])
+        atomlines = sdf_frame[4:4+n_atom]
+        self.name = "___"
+        self.index = 0
+        for atomline in atomlines:
+            tmpatom = fATOM()
+            items = atomline.split()
+            x = float(items[0])
+            y = float(items[1])
+            z = float(items[2])
+            name = items[3]
+            tmpatom.posi = (x,y,z)
+            tmpatom.index = 0 
+            tmpatom.name = name
+            self.add_atom(tmpatom)
 
 class fRESIDUE(fCHEMO):
     pass
@@ -1081,6 +1101,21 @@ def next_frame(filename):
         else:
             frame.append(line)
 
+def next_frame_sdf(filename):
+    just_yield = True
+    frame = list()
+    for line in open(filename):
+        if just_yield : # or ( len(line)>=6 and line[:6] in ("MODEL ","TITLE ") ):
+            frame = list()
+            frame.append(line)
+            just_yield = False
+        elif "$$$$" in line:
+            frame.append(line)
+            yield frame
+            just_yield = True
+            frame = list()
+        else:
+            frame.append(line)
 
 if False:
     def dist_atom(a,b):
