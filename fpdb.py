@@ -231,24 +231,77 @@ class fCHEMO():
             if exist_flag:
                 pass
             else:
-                name = "H%-2d"%H_index
+                name = "H%d"%H_index
                 while ( name in self.atoms_d.keys() ):
                     H_index += 1
-                    name = "H%-2d"%H_index
+                    name = "H%d"%H_index
                 tmp_atom.name = name
                 self.atoms.append(tmp_atom)
                 self.atoms_d[name] = tmp_atom
+    
+    def rename_atom(self):
+        element_index = dict()
+        for atom in self.atoms:
+            if not element_index.has_key(atom.element):
+                element_index[atom.element] = 0
+                newname = atom.element+"%d"%element_index[atom.element]
+            else:
+                element_index[atom.element] += 1
+                newname = atom.element+"%d"%element_index[atom.element]
+            atom.name = newname
+            self.atoms_d[atom.name] = atom
 
-    def generate_OPLS_parameters(self, nc = 0, version = '2005'):
+    def generate_OPLS_parameters(self, nc = 0, version = '2005', rename_atom = False):
+        if rename_atom:
+            self.rename_atom()
+
+        self.removeH()
         self.addH( keep_current = False,nc = nc)
         resname = self.name.lower()
         self.write_pdb("%s.pdb"%resname)
         os.system("%s -ipdb %s.pdb -omae %s.mae"%(PROGS['pdbconvert'],resname,resname))
         os.system("%s %s %s.mae"%(PROGS['hetgrp_ffgen'],version,resname))
         os.system("%s -f %s.pdb -o %s.top -p %s"%(PROGS['opls_to_gmx'],resname,resname,resname)) 
-        os.system("mkdir %s_paramter"%resname)
-        os.system("mv %s %s.mae %s.pdb %s.top %s_nb.itp %s_paramter/"%(resname,resname,resname,resname,resname,resname))
+        os.system("mkdir %s_parameter"%resname)
+        os.system("mv %s %s.mae %s.pdb %s.top %s_nb.itp %s_parameter/"%(resname,resname,resname,resname,resname,resname))
         sys.stdout.write(">>>>> FPDB, parameters of compound %s generated. \n"%resname)
+
+        # load parameters
+        nb_itp = "%s_parameter/%s_nb.itp"%(resname,resname)
+        top = "%s_parameter/%s.top"%(resname,resname)
+        self.load_parameters_from_file(nb_itp,top)
+
+    def load_parameters_from_file(self,nb_itp,top):
+        # vdw
+        flag = False        
+        for line in open(nb_itp):
+            if "atomtypes" in line:
+                flag = True
+                continue
+            if flag :
+                if "name" not in line:
+                    if line.strip() != "":
+                        name = line.split()[0]
+                        sig = float(line.split()[5])
+                        eps = float(line.split()[6])
+                        self.atoms_d[name].sig = sig
+                        self.atoms_d[name].eps = eps
+        # charge
+        flag = False
+        for line in open(top):
+            if "atoms" in line:
+                flag = True
+                continue
+            elif "bonds" in line:
+                flag = False
+                continue
+            if flag :
+                if line.strip() != "":
+                    if line.strip()[0] != ";":
+                        name = line.split()[1]
+                        charge = float(line.split()[6])
+                        self.atoms_d[name].charge = charge
+
 
     def __init__(self,resi_lines=None):
         if resi_lines == None:
@@ -303,6 +356,16 @@ class fCHEMO():
                 self.atoms_d[a.name] = a
             except:
                 sys.stderr.write("##### Error, Error loading atom %s"%atom)
+
+    def remove_atom(self,atom):
+        self.atoms.remove(atom)
+        if self.atoms_d.has_key(atom.name):
+            del(self.atoms_d[atom.name])
+
+    def removeH(self):
+        to_del = [ x for x in self.atoms if x.element == "H" ]
+        for atom in to_del:
+            self.remove_atom(atom)
                 
     def find_atoms(self, name = None , index = None ):
         result = list()
