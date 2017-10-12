@@ -759,7 +759,7 @@ class fTOPOLOGY():
 
     
 class fPDB:
-    def __init__(self,frame):
+    def __init__(self,frame, fragmentation=False):
         lines = None
         if hasattr(frame,'isalpha'):
             lines = open(frame).readlines()
@@ -787,8 +787,10 @@ class fPDB:
                         self.model_n = int(line[5:14])
                 except:
                     pass
-        
-        self.topology = fTOPOLOGY(lines)
+        if fragmentation:
+          self.topology = frag.fFRAGTOPO(lines)
+        else:
+          self.topology = fTOPOLOGY(lines)
 
     @staticmethod
     def load_ff_param_resi(resi,gmxtop):
