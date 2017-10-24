@@ -526,6 +526,7 @@ class fSDF_MOL(fCHEMO):
             tmpatom.posi = (x,y,z)
             tmpatom.index = 0 
             tmpatom.name = name
+            tmpatom.element = name[0]
             self.add_atom(tmpatom)
 
 class fRESIDUE(fCHEMO):
@@ -757,7 +758,6 @@ class fTOPOLOGY():
         for residue in self.residues:
             residue.write_pdb(ofp)
 
-    
 class fPDB:
     def __init__(self,frame, fragmentation=False):
         lines = None
