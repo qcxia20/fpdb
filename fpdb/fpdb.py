@@ -788,7 +788,8 @@ class fPDB:
                 except:
                     pass
         if fragmentation:
-          self.topology = frag.fFRAGTOPO(lines)
+          from frag import fFRAGTOPO
+          self.topology = fFRAGTOPO(lines)
         else:
           self.topology = fTOPOLOGY(lines)
 
