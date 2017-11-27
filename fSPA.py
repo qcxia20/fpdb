@@ -66,3 +66,14 @@ class fSPA_summary:
             self.waters.append(water)
             self.waters_d[water.index] = water
         
+class fSPA():
+    def __init__():
+        pass
+
+def prepare_md(dirpath=dirpath):
+    assert os.path.isdir(dirpath)
+    assert os.path.isfile("%s/rec.pdb"%dirpath)
+    assert os.path.isfile("%s/lig.pdb"%dirpath)
+   
+
+
