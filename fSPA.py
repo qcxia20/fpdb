@@ -74,6 +74,44 @@ def prepare_md(dirpath=dirpath):
     assert os.path.isdir(dirpath)
     assert os.path.isfile("%s/rec.pdb"%dirpath)
     assert os.path.isfile("%s/lig.pdb"%dirpath)
+
+    ## receptor
+        # load receptor
+
+        # fix his name 
+            # if his.list exist 
+                use his.list
+            # else
+                use HID by default
+
+        # tleap addH
+
+        # amberH 2 gmx H
+
+        # pdb2gmx generate topology
+
+        # add box
+
+    ## ligand
+        # fix atom coordinate, nothing to do 
    
 
+    ## minimize receptor 
+    
+    ## add solvent 
+
+    ## minimize solvent 
+
+    ## check rmsd
+        ## if too large of some atoms, warning 
+
+    ## generate sge files
+
+    ## return to cgi, wait for submit 
+
+def run_spa_md():
+    ## submit job
+    ## wait 10 seconds
+    ## check status
+    ## submit to database
 
