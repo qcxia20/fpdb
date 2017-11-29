@@ -114,7 +114,7 @@ def prepare_md(dirpath):
         with open("leap.in",'w') as ofp:
             ofp.write("""
                 source leaprc.ff14SB
-                rec = loadpdb ftmp.pdb
+                rec = loadpdb ftmp_ter.pdb
                 savepdb rec tleap_out.pdb
                 quit
             """)
@@ -150,12 +150,21 @@ def prepare_md(dirpath):
                     ofp.write("%s%8.3f%8.3f%8.3f%s"%(line[:30],x,y,z,line[54:]))
                 else:
                     ofp.write(line)
+
+    ## cp mdp files
+    os.popen("cp -r %s/mdp ./"%fpdb.__path__[0][:-4]).read()
    
     ## minimize receptor 
+    os.popen("gmx grompp -f mdp/em.mdp -o em.tpr -c box.gro -p topol.top -maxwarn 10").read()
+    os.popen("gmx mdrun -deffnm em").read()
     
     ## add solvent 
+    os.popen("gmx solvate -cp em.gro -cs spc216 -o sys.gro -p topol.top").read()
 
     ## minimize solvent 
+    os.popen("gmx grompp -f mdp/em.mdp -o em_sys.tpr -c sys.gro -p topol.top -r box.gro -maxwarn 10").read()
+    os.popen("gmx mdrun -deffnm em_sys").read()
+
 
     ## check rmsd
         ## if too large of some atoms, warning 
@@ -163,10 +172,15 @@ def prepare_md(dirpath):
     ## generate sge files
 
     ## return to cgi, wait for submit 
+    return 0
 
 def run_spa_md():
     pass
+
     ## submit job
+    ## SA solvent
+
+    ## reminimize
     ## wait 10 seconds
     ## check status
     ## submit to database
