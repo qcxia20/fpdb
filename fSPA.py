@@ -70,21 +70,44 @@ class fSPA():
     def __init__():
         pass
 
-def prepare_md(dirpath=dirpath):
+def prepare_md(dirpath):
+    dirpath = "%s/%s"%("/home/fuqy/work/SPA_database/www/submit_jobs",dirpath)
+    print dirpath
     assert os.path.isdir(dirpath)
     assert os.path.isfile("%s/rec.pdb"%dirpath)
     assert os.path.isfile("%s/lig.pdb"%dirpath)
 
+    os.chdir(dirpath)
+
+    if True:
     ## receptor
+
+        # assert(1==0)
         # load receptor
+        rec = fpdb.fPDB("%s/rec.pdb"%dirpath)
 
         # fix his name 
+        if os.path.isfile("%s/his.list"%dirpath):
             # if his.list exist 
-                use his.list
+            # load his.list
+            histype=dict()
+            for line in open("%s/his.list"%dirpath):
+                histype[int(line.split()[0])] = line.split()[1]
+            for resi in rec.topology.residues:
+                if resi.index in histype.keys():
+                    resi.name = histype[resi.index]
+        else:
             # else
-                use HID by default
+            for resi in rec.topology.residues:
+                if resi.name in ("HIS","HID","HIP","HIE"):
+                    #use HID by default
+                    resi.name = "HID"
 
+        print ">>>> TEST"
+        rec.write_pdb("ftmp.pdb")
         # tleap addH
+        # ofp = open("leap.in",'w')
+        # ofp.write()
 
         # amberH 2 gmx H
 
@@ -110,6 +133,7 @@ def prepare_md(dirpath=dirpath):
     ## return to cgi, wait for submit 
 
 def run_spa_md():
+    pass
     ## submit job
     ## wait 10 seconds
     ## check status
