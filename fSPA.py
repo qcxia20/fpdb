@@ -103,22 +103,54 @@ def prepare_md(dirpath):
                     #use HID by default
                     resi.name = "HID"
 
+        for resi in rec.topology.residues:
+            if resi.name in ("CYS","CYZ"):
+                #use HID by default
+                resi.name = "CYX"
+
         print ">>>> TEST"
         rec.write_pdb("ftmp.pdb")
-        # tleap addH
-        # ofp = open("leap.in",'w')
-        # ofp.write()
-
-        # amberH 2 gmx H
-
-        # pdb2gmx generate topology
+        os.popen("addter.py ftmp.pdb ftmp_ter.pdb").read()
+        with open("leap.in",'w') as ofp:
+            ofp.write("""
+                source leaprc.ff14SB
+                rec = loadpdb ftmp.pdb
+                savepdb rec tleap_out.pdb
+                quit
+            """)
+        os.popen("tleap -f leap.in").read()
+        os.popen("sed -i s/CYX/CYS/g tleap_out.pdb").read()
+        os.popen("atomtypeconvert.py a2g tleap_out.pdb tleap_out_trans.pdb").read()
+        os.popen("gmx pdb2gmx -f tleap_out_trans.pdb -o rec.gro -merge all -water tip3p -ff amber99sb").read()
 
         # add box
+        os.system("gmx editconf -f rec.gro -o box.gro -d 1.0")
 
     ## ligand
+    if True:
         # fix atom coordinate, nothing to do 
+        # compute shift
+        line_o = open('rec.gro').readlines()[2]
+        line_f = open('box.gro').readlines()[2]
+        xo = float(line_o[20:28]) * 10
+        yo = float(line_o[28:36]) * 10
+        zo = float(line_o[36:44]) * 10
+        xf = float(line_f[20:28]) * 10
+        yf = float(line_f[28:36]) * 10
+        zf = float(line_f[36:44]) * 10
+        xs,ys,zs = xf-xo,yf-yo,zf-zo 
+        
+        # adjust ligand coordinate 
+        with open("lig_shift.pdb",'w') as ofp:
+            for line in open("lig.pdb"):
+                if len(line)>=6 and line[:6] in ("ATOM  ","HETATM"):
+                    x = float(line[30:38]) + xs
+                    y = float(line[38:46]) + ys
+                    z = float(line[46:54]) + zs
+                    ofp.write("%s%8.3f%8.3f%8.3f%s"%(line[:30],x,y,z,line[54:]))
+                else:
+                    ofp.write(line)
    
-
     ## minimize receptor 
     
     ## add solvent 
