@@ -14,7 +14,7 @@ def dot( a, m ):
             for j in range(3):
                 prod[i] = prod[i] + a[j]*matrix[j][i]
     except:
-        print "Dot error"
+        print("Dot error")
         sys.exit(1)
     return prod
 

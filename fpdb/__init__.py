@@ -1,2 +1,2 @@
-from fpdb import *
-from frotate import *
+from fpdb.fpdb import *
+from fpdb.frotate import *
