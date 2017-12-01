@@ -382,11 +382,8 @@ class fCHEMO():
                         result.append(atom)
         return result
 
-    def write_pdb(self,ofile):
-        if hasattr(ofile,'write'):
-            ofp = ofile
-        else:
-            ofp = open(ofile,'w')
+    def write_pdb(self,ofile=None):
+        pdbstr = ""
         for atom in self.atoms:
             x,y,z = atom.posi
             
@@ -399,7 +396,14 @@ class fCHEMO():
             line = 'ATOM  %5d %4s%1s%3s %1s%4d    %8.3f%8.3f%8.3f%6.2f%6.2f%12s\n'%(
                     atom.index,tmpname,atom.conf,self.name,self.chain,self.index,
                     x,y,z,atom.occ,atom.bf,atom.element)
-            ofp.write(line)
+            pdbstr += line
+        if ofile is None:
+            return pdbstr
+        elif hasattr(ofile,'write'):
+            ofile.write(pdbstr)
+        else:
+            ofp = open(ofile,'w')
+            ofp.write(pdbstr)
     
     def write_pdb_plop(self,ofile=None):
         if self.name in standard_protein_residues:
