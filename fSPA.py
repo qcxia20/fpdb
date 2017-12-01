@@ -1,6 +1,9 @@
 #!/usr/bin/python
 import sys,os
 import fpdb
+from subprocess import Popen as sP 
+from subprocess import PIPE 
+
 
 class fSPA_water(fpdb.fCHEMO):
     def __init__(self,three_lines):
@@ -70,9 +73,13 @@ class fSPA():
     def __init__():
         pass
 
-def prepare_md(dirpath):
+def cgi_system(cmd,output):
+    i,o = sP(cmd,shell=True,stdout=PIPE,stderr=PIPE).communicate()
+    output.write(i)
+    output.write(o)
+    
+def prepare_md(dirpath,output=sys.stdout):
     dirpath = "%s/%s"%("/home/fuqy/work/SPA_database/www/submit_jobs",dirpath)
-    print dirpath
     assert os.path.isdir(dirpath)
     assert os.path.isfile("%s/rec.pdb"%dirpath)
     assert os.path.isfile("%s/lig.pdb"%dirpath)
@@ -108,9 +115,11 @@ def prepare_md(dirpath):
                 #use HID by default
                 resi.name = "CYX"
 
-        print ">>>> TEST"
+        print ">>>>> OUTPUT of fSPA.prepare_md(): "
         rec.write_pdb("ftmp.pdb")
-        os.popen("addter.py ftmp.pdb ftmp_ter.pdb").read()
+        cgi_system("addter.py ftmp.pdb ftmp_ter.pdb",output)
+        
+        #cgi_system("addter.py ftmp.pdb ftmp_ter.pdb").read()
         with open("leap.in",'w') as ofp:
             ofp.write("""
                 source leaprc.ff14SB
@@ -118,13 +127,13 @@ def prepare_md(dirpath):
                 savepdb rec tleap_out.pdb
                 quit
             """)
-        os.popen("tleap -f leap.in").read()
-        os.popen("sed -i s/CYX/CYS/g tleap_out.pdb").read()
-        os.popen("atomtypeconvert.py a2g tleap_out.pdb tleap_out_trans.pdb").read()
-        os.popen("gmx pdb2gmx -f tleap_out_trans.pdb -o rec.gro -merge all -water tip3p -ff amber99sb").read()
+        cgi_system("tleap -f leap.in",output)
+        cgi_system("sed -i s/CYX/CYS/g tleap_out.pdb",output)
+        cgi_system("atomtypeconvert.py a2g tleap_out.pdb tleap_out_trans.pdb",output)
+        cgi_system("gmx pdb2gmx -f tleap_out_trans.pdb -o rec.gro -merge all -water tip3p -ff amber99sb",output)
 
         # add box
-        os.system("gmx editconf -f rec.gro -o box.gro -d 1.0")
+        cgi_system("gmx editconf -f rec.gro -o box.gro -d 1.0",output)
 
     ## ligand
     if True:
@@ -152,18 +161,18 @@ def prepare_md(dirpath):
                     ofp.write(line)
 
     ## cp mdp files
-    os.popen("cp -r %s/mdp ./"%fpdb.__path__[0][:-4]).read()
+    cgi_system("cp -r %s/mdp ./"%fpdb.__path__[0][:-4],output)
    
     ## minimize receptor 
-    os.popen("gmx grompp -f mdp/em.mdp -o em.tpr -c box.gro -p topol.top -maxwarn 10").read()
-    os.popen("gmx mdrun -deffnm em").read()
+    cgi_system("gmx grompp -f mdp/em.mdp -o em.tpr -c box.gro -p topol.top -maxwarn 10",output)
+    cgi_system("gmx mdrun -deffnm em",output)
     
     ## add solvent 
-    os.popen("gmx solvate -cp em.gro -cs spc216 -o sys.gro -p topol.top").read()
+    cgi_system("gmx solvate -cp em.gro -cs spc216 -o sys.gro -p topol.top",output)
 
     ## minimize solvent 
-    os.popen("gmx grompp -f mdp/em.mdp -o em_sys.tpr -c sys.gro -p topol.top -r box.gro -maxwarn 10").read()
-    os.popen("gmx mdrun -deffnm em_sys").read()
+    # cgi_system("gmx grompp -f mdp/em.mdp -o em_sys.tpr -c sys.gro -p topol.top -r box.gro -maxwarn 10",output)
+    #cgi_system("gmx mdrun -deffnm em_sys",output)
 
 
     ## check rmsd
