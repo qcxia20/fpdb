@@ -4,18 +4,16 @@ residues = pdb.topology.residues
 minDist = 10e8
 keeper = None
 for i, resi in enumerate(residues):
-  for j, resj in enumerate(residues):
-    if j >= i: continue
-    for k, atomk in enumerate(resi.atoms):
-      for l, atoml in enumerate(resj.atoms):
-        if l >= k: continue
-        d = fpdb.dist(atomk, atoml)
-        if d < minDist:
-          minDist = d
-          keeper = (resi, atomk, resj, atoml)
+  for resj in residues[:i]:
+    for atomi in resi.atoms:
+      for atomj in resj.atoms:
+        d_2 = fpdb.dist_2(atomi, atomj)
+        if d_2 < minDist:
+          minDist = d_2
+          keeper = (resi, atomi, resj, atomj)
 
-resi, atomk, resj, atoml = keeper
+resi, atomi, resj, atomj = keeper
 print("\nmin distance atom pair are atom %s%d:%s%d and %s%d:%s%d\n"%(
-  resi.name, resi.index, atomk.name, atomk.index, 
-  resj.name, resj.index, atoml.name, atoml.index,))
+  resi.name, resi.index, atomi.name, atomi.index, 
+  resj.name, resj.index, atomj.name, atomj.index,))
   
