@@ -183,7 +183,7 @@ def prepare_md(dirpath,output=sys.stdout):
     ## return to cgi, wait for submit 
     return 0
 
-def run_spa_md():
+def run_spa_md(dirpath,output=sys.stdout):
     pass
 
     ## submit job
