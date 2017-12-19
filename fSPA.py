@@ -136,7 +136,7 @@ def prepare_md(dirpath,output=sys.stdout):
         cgi_system("gmx editconf -f rec.gro -o box.gro -d 1.0",output)
 
     ## ligand
-    if True:
+    if False:
         # fix atom coordinate, nothing to do 
         # compute shift
         line_o = open('rec.gro').readlines()[2]
