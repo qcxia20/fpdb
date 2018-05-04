@@ -4,6 +4,7 @@ import math
 #import simtk.unit as su
 import sys,os
 import numpy as np
+from fhet import hetnames
 
 MASS =    {'O':15.999,  'N':14.010,
            'C':12.010,  'H': 1.008,
