@@ -4,7 +4,7 @@ import math
 #import simtk.unit as su
 import sys,os
 import numpy as np
-from fhet import hetnames
+from fhet import hetnames,cofactors
 
 MASS =    {'O':15.999,  'N':14.010,
            'C':12.010,  'H': 1.008,
@@ -187,7 +187,7 @@ class fCHEMO():
 
     ### Did not finished !
     def addH(self,keep_current = False,nc = 0 ):
-        sys.stderr.write("##### FPDB WARNING: Currently, using fCHEMO.addH will removes the names/indexes of the exist atoms !!\n")
+        sys.stderr.write("##### FPDB WARNING: Currently, using fCHEMO.addH will remove the names/indexes of the exist atoms !!\n")
         parameter_text = '''
                        SP1_CUTOFF_ANGLE = 155.0
                        SP2_CUTOFF_ANGLE = 115.0
@@ -334,6 +334,7 @@ class fCHEMO():
         self.var1 = None
         self.var2 = None
         self.var3 = None
+        self.del_duplicate_atoms()
 
     def getCOM(self):
         mass = np.array([MASS[i.element] for i in self.atoms])
@@ -513,6 +514,18 @@ class fCHEMO():
                 if fHbond.is_hydrogen_bond(d,h,a):
                     as_acceptor.append( fHbond(d,h,a) )
         return as_donar,as_acceptor
+
+    def del_duplicate_atoms(self):
+        # 
+        names = set()
+        tmp_atoms = list()
+        for atom in self.atoms:
+            if atom.name not in names:
+                tmp_atoms.append(atom)
+                names.add(atom.name)
+            else:
+                pass
+        self.atom = tmp_atoms
 
 class fSDF_MOL(fCHEMO):
     def __init__(self, sdf_frame):
