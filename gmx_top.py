@@ -115,8 +115,8 @@ class gmxtop:
         #     # print(self._resi_amber[t])
         # print(self.wildcard_types)
         # print(self.gmx2amb_table)
-        print "HID"
-        tmp =  self.get_resi("HID")
+        print "NA"
+        tmp =  self.get_resi("NA")
         for key in tmp:
             print(key)
         

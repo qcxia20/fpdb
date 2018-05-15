@@ -129,7 +129,7 @@ class fATOM():
                 self.element = tmpname[0]
             self.atom_num = ATOM_NUM[self.element]
         except:
-            print("DEBUG",tmpname)
+            # print("DEBUG",tmpname)
             self.element = tmpname[0]  ### !!!! NOT FINISHED
         self.resi_name = atom_line[17:20].strip()
         try:
