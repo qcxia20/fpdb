@@ -6,5 +6,5 @@ from __future__ import unicode_literals
 
 __version__ = '0.1.0'
 
-from fpdb.fpdb import *
-from fpdb.frotate import *
+from .fpdb import *
+from .frotate import *
