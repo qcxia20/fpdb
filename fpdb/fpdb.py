@@ -4,7 +4,7 @@ import math
 #import simtk.unit as su
 import sys,os
 import numpy as np
-from fhet import hetnames,cofactors
+from .fhet import hetnames,cofactors
 
 MASS =    {'O':15.999,  'N':14.010,
            'C':12.010,  'H': 1.008,
@@ -406,47 +406,6 @@ class fCHEMO():
         else:
             ofp = open(ofile,'w')
             ofp.write(pdbstr)
-    
-    def write_pdb_plop(self,ofile=None):
-        if self.name in standard_protein_residues:
-            atomline='ATOM  %5d  %-3s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n'
-        else:
-            atomline='HETATM%5d %-4s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n' # qiuyu Fu
-        if self.name in standard_ion_redsidues:
-            atomline='HETATM%5d %-4s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n'
-        if ofile is None:
-            ofp = str()
-            if self.name not in standard_protein_residues: ofp +='TER\n'
-            for atom in self.atoms:
-                x,y,z = atom.posi
-                line = atomline%(atom.index,atom.name,atom.conf,self.name,self.chain,self.index,x,y,z)
-                ofp += line
-            if self.name not in standard_protein_residues: ofp +='TER\n'
-            return ofp
-        elif hasattr(ofile,'write'):
-            ofp = ofile
-            if self.name not in standard_protein_residues:ofp.write('TER\n')
-            for atom in self.atoms:
-		if len(atom.name) != 4 :
-			x,y,z = atom.posi
-			line = atomline%(atom.index,atom.name,atom.conf,self.name,self.chain,self.index,x,y,z)
-			ofp.write(line)
-		else:
-			tmpatomline='HETATM%5d %-4s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n' 
-			x,y,z = atom.posi
-			line = tmpatomline%(atom.index,atom.name,atom.conf,self.name,self.chain,self.index,x,y,z)
-			ofp.write(line)
-
-            if self.name not in standard_protein_residues:ofp.write('TER\n')
-        else:
-            ofp = open(ofile,'a')
-            if self.name not in standard_protein_residues:ofp.write('TER\n')
-            for atom in self.atoms:
-                x,y,z = atom.posi
-                line = atomline%(atom.index,atom.name,atom.conf,self.name,self.chain,self.index,x,y,z)
-                ofp.write(line)
-            if self.name not in standard_protein_residues:ofp.write('TER\n')
-            ofp.close()
 
     def debug(self):
         print('name',self.name)
