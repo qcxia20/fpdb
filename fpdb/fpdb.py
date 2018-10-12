@@ -832,7 +832,7 @@ class fPDB:
         if tmpname in gmx_resi_set:
             _ = dict()
             for x in gmxtop.get_resi(tmpname) :
-                _[x[[0]] = x 
+                _[x[0]] = x 
             # _ = { x[0]:x for x in gmxtop.get_resi(tmpname) }
             if resi_atoms == set(_.keys()):
                 gmx_atoms = _
