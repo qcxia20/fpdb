@@ -411,11 +411,7 @@ class fCHEMO():
         if self.name in standard_protein_residues:
             atomline='ATOM  %5d  %-3s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n'
         else:
-<<<<<<< HEAD
-            atomline='HETATM%5d  %-3s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n' 
-=======
             atomline='HETATM%5d %-4s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n' # qiuyu Fu
->>>>>>> e5068a39068062d9a8281d182bcef8ada06bc2f4
         if self.name in standard_ion_redsidues:
             atomline='HETATM%5d %-4s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n'
         if ofile is None:
