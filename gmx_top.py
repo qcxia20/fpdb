@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+nonbonded = '/home/fuqy/Software/gromacs-5.1.4/share/top/amber99sb.ff/ffnonbonded.itp'
+rtp = '/home/fuqy/Software/gromacs-5.1.4/share/top/amber99sb.ff/aminoacids.rtp'
+watermodel = '/home/fuqy/Software/gromacs-5.1.4/share/top/amber99sb.ff/tip3p.itp'
 class gmxtop:
     # private variables
     _atomtype = list()
@@ -14,7 +17,7 @@ class gmxtop:
     _resitype_amber = list()  ##
 
 
-    def __init__(self,nonbondfile,rtpfile,waterfile):
+    def __init__(self,nonbondfile=nonbonded,rtpfile=rtp,waterfile=watermodel):
         self.make_gmx2amb_table()
 
         for line in open(nonbondfile):

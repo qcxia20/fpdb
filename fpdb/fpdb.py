@@ -411,7 +411,7 @@ class fCHEMO():
         if self.name in standard_protein_residues:
             atomline='ATOM  %5d  %-3s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n'
         else:
-            atomline='HETATM%5d  %-3s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n'
+            atomline='HETATM%5d  %-3s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n' 
         if self.name in standard_ion_redsidues:
             atomline='HETATM%5d %-4s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n'
         if ofile is None:
@@ -427,9 +427,16 @@ class fCHEMO():
             ofp = ofile
             if self.name not in standard_protein_residues:ofp.write('TER\n')
             for atom in self.atoms:
-                x,y,z = atom.posi
-                line = atomline%(atom.index,atom.name,atom.conf,self.name,self.chain,self.index,x,y,z)
-                ofp.write(line)
+		if len(atom.name) != 4 :
+			x,y,z = atom.posi
+			line = atomline%(atom.index,atom.name,atom.conf,self.name,self.chain,self.index,x,y,z)
+			ofp.write(line)
+		else:
+			tmpatomline='HETATM%5d %-4s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n' 
+			x,y,z = atom.posi
+			line = tmpatomline%(atom.index,atom.name,atom.conf,self.name,self.chain,self.index,x,y,z)
+			ofp.write(line)
+
             if self.name not in standard_protein_residues:ofp.write('TER\n')
         else:
             ofp = open(ofile,'a')
@@ -823,7 +830,10 @@ class fPDB:
             tmpname = resi.name
             
         if tmpname in gmx_resi_set:
-            _ = { x[0]:x for x in gmxtop.get_resi(tmpname) }
+            _ = dict()
+            for x in gmxtop.get_resi(tmpname) :
+                _[x[[0]] = x 
+            # _ = { x[0]:x for x in gmxtop.get_resi(tmpname) }
             if resi_atoms == set(_.keys()):
                 gmx_atoms = _
             else:
@@ -831,7 +841,10 @@ class fPDB:
         
         if gmx_atoms == None:
             for gmx_resi in gmx_resi_set:
-                _ = { x[0]:x for x in gmxtop.get_resi(gmx_resi)  }
+             #   _ = { x[0]:x for x in gmxtop.get_resi(gmx_resi)  }
+                _ = dict()
+                for x in gmxtop.get_resi(gmx_resi):
+                    _[x[0]] = x  
                 if resi_atoms == set(_.keys()):
                     # print(>>>>> Loading GMX parameters : %s"%gmx_resi)
                     if tmpname != gmx_resi :
