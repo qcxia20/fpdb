@@ -393,7 +393,7 @@ class fCHEMO():
             else:
                 tmpname = " "+tmpname+" "*(3-len(tmpname))
     
-            line = 'ATOM  %5d %4s%1s%3s %1s%4d    %8.3f%8.3f%8.3f%6.2f%6.2f%12s\n'%(
+            line = 'ATOM  %5d %4s%1s%-4s%1s%4d    %8.3f%8.3f%8.3f%6.2f%6.2f%12s\n'%(
                     atom.index,tmpname,atom.conf,self.name,self.chain,self.index,
                     x,y,z,atom.occ,atom.bf,atom.element)
             pdbstr += line
