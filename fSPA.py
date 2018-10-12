@@ -130,10 +130,10 @@ def prepare_md(dirpath,output=sys.stdout):
         cgi_system("tleap -f leap.in",output)
         cgi_system("sed -i s/CYX/CYS/g tleap_out.pdb",output)
         cgi_system("atomtypeconvert.py a2g tleap_out.pdb tleap_out_trans.pdb",output)
-        cgi_system("gmx pdb2gmx -f tleap_out_trans.pdb -o rec.gro -merge all -water tip3p -ff amber99sb",output)
+        # cgi_system("gmx pdb2gmx -f tleap_out_trans.pdb -o rec.gro -merge all -water tip3p -ff amber99sb",output)
 
         # add box
-        cgi_system("gmx editconf -f rec.gro -o box.gro -d 1.0",output)
+        # cgi_system("gmx editconf -f rec.gro -o box.gro -d 1.0",output)
 
     ## ligand
     if False:
@@ -161,14 +161,14 @@ def prepare_md(dirpath,output=sys.stdout):
                     ofp.write(line)
 
     ## cp mdp files
-    cgi_system("cp -r %s/mdp ./"%fpdb.__path__[0][:-4],output)
+    # cgi_system("cp -r %s/mdp ./"%fpdb.__path__[0][:-4],output)
    
     ## minimize receptor 
-    cgi_system("gmx grompp -f mdp/em.mdp -o em.tpr -c box.gro -p topol.top -maxwarn 10",output)
-    cgi_system("gmx mdrun -deffnm em",output)
+    # cgi_system("gmx grompp -f mdp/em.mdp -o em.tpr -c box.gro -p topol.top -maxwarn 10",output)
+    # cgi_system("gmx mdrun -deffnm em",output)
     
     ## add solvent 
-    cgi_system("gmx solvate -cp em.gro -cs spc216 -o sys.gro -p topol.top",output)
+    # cgi_system("gmx solvate -cp em.gro -cs spc216 -o sys.gro -p topol.top",output)
 
     ## minimize solvent 
     # cgi_system("gmx grompp -f mdp/em.mdp -o em_sys.tpr -c sys.gro -p topol.top -r box.gro -maxwarn 10",output)
@@ -182,6 +182,16 @@ def prepare_md(dirpath,output=sys.stdout):
 
     ## return to cgi, wait for submit 
     return 0
+
+def submit_job(index,stype='AMOEBA',queue='gpu',output=sys.stdout):
+    dir_path = "%s/www/submit_jobs/%s"%(os.environ['SPA_DATABASE_HOME'],index)
+    name = open("%s/name"%dir_path).read().strip()
+    assert name[0] not in "0123456789"
+    if stype == "AMOEBA" and queue == 'gpu':
+        cgi_system("scp -r %s fuqy@k209:/pubhome/fuqy/%s_%s"%(dir_path,name,index), output)
+        # cgi_system("ssh fuqy@k209 cp /pubhome/fuqy/run.sh /pubhome/fuqy/Auto_%s/"%(name,),output )
+        cgi_system("ssh fuqy@k209 bash /pubhome/fuqy/submit.sh %s %s"%(name,index),output)
+    return
 
 def run_spa_md(dirpath,output=sys.stdout):
     pass

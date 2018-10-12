@@ -4,6 +4,7 @@ import math
 #import simtk.unit as su
 import sys,os
 import numpy as np
+from fhet import hetnames,cofactors
 
 MASS =    {'O':15.999,  'N':14.010,
            'C':12.010,  'H': 1.008,
@@ -128,7 +129,7 @@ class fATOM():
                 self.element = tmpname[0]
             self.atom_num = ATOM_NUM[self.element]
         except:
-            print("DEBUG",tmpname)
+            # print("DEBUG",tmpname)
             self.element = tmpname[0]  ### !!!! NOT FINISHED
         self.resi_name = atom_line[17:20].strip()
         try:
@@ -186,7 +187,7 @@ class fCHEMO():
 
     ### Did not finished !
     def addH(self,keep_current = False,nc = 0 ):
-        sys.stderr.write("##### FPDB WARNING: Currently, using fCHEMO.addH will removes the names/indexes of the exist atoms !!\n")
+        sys.stderr.write("##### FPDB WARNING: Currently, using fCHEMO.addH will remove the names/indexes of the exist atoms !!\n")
         parameter_text = '''
                        SP1_CUTOFF_ANGLE = 155.0
                        SP2_CUTOFF_ANGLE = 115.0
@@ -333,6 +334,7 @@ class fCHEMO():
         self.var1 = None
         self.var2 = None
         self.var3 = None
+        self.del_duplicate_atoms()
 
     def getCOM(self):
         mass = np.array([MASS[i.element] for i in self.atoms])
@@ -409,7 +411,7 @@ class fCHEMO():
         if self.name in standard_protein_residues:
             atomline='ATOM  %5d  %-3s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n'
         else:
-            atomline='HETATM%5d  %-3s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n'
+            atomline='HETATM%5d %-4s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n' # qiuyu Fu
         if self.name in standard_ion_redsidues:
             atomline='HETATM%5d %-4s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n'
         if ofile is None:
@@ -425,9 +427,16 @@ class fCHEMO():
             ofp = ofile
             if self.name not in standard_protein_residues:ofp.write('TER\n')
             for atom in self.atoms:
-                x,y,z = atom.posi
-                line = atomline%(atom.index,atom.name,atom.conf,self.name,self.chain,self.index,x,y,z)
-                ofp.write(line)
+		if len(atom.name) != 4 :
+			x,y,z = atom.posi
+			line = atomline%(atom.index,atom.name,atom.conf,self.name,self.chain,self.index,x,y,z)
+			ofp.write(line)
+		else:
+			tmpatomline='HETATM%5d %-4s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n' 
+			x,y,z = atom.posi
+			line = tmpatomline%(atom.index,atom.name,atom.conf,self.name,self.chain,self.index,x,y,z)
+			ofp.write(line)
+
             if self.name not in standard_protein_residues:ofp.write('TER\n')
         else:
             ofp = open(ofile,'a')
@@ -512,6 +521,18 @@ class fCHEMO():
                 if fHbond.is_hydrogen_bond(d,h,a):
                     as_acceptor.append( fHbond(d,h,a) )
         return as_donar,as_acceptor
+
+    def del_duplicate_atoms(self):
+        # 
+        names = set()
+        tmp_atoms = list()
+        for atom in self.atoms:
+            if atom.name not in names:
+                tmp_atoms.append(atom)
+                names.add(atom.name)
+            else:
+                pass
+        self.atom = tmp_atoms
 
 class fSDF_MOL(fCHEMO):
     def __init__(self, sdf_frame):
@@ -809,7 +830,10 @@ class fPDB:
             tmpname = resi.name
             
         if tmpname in gmx_resi_set:
-            _ = { x[0]:x for x in gmxtop.get_resi(tmpname) }
+            _ = dict()
+            for x in gmxtop.get_resi(tmpname) :
+                _[x[0]] = x 
+            # _ = { x[0]:x for x in gmxtop.get_resi(tmpname) }
             if resi_atoms == set(_.keys()):
                 gmx_atoms = _
             else:
@@ -817,7 +841,10 @@ class fPDB:
         
         if gmx_atoms == None:
             for gmx_resi in gmx_resi_set:
-                _ = { x[0]:x for x in gmxtop.get_resi(gmx_resi)  }
+             #   _ = { x[0]:x for x in gmxtop.get_resi(gmx_resi)  }
+                _ = dict()
+                for x in gmxtop.get_resi(gmx_resi):
+                    _[x[0]] = x  
                 if resi_atoms == set(_.keys()):
                     # print(>>>>> Loading GMX parameters : %s"%gmx_resi)
                     if tmpname != gmx_resi :
