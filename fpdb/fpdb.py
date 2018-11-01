@@ -427,16 +427,16 @@ class fCHEMO():
             ofp = ofile
             if self.name not in standard_protein_residues:ofp.write('TER\n')
             for atom in self.atoms:
-		if len(atom.name) != 4 :
-			x,y,z = atom.posi
-			line = atomline%(atom.index,atom.name,atom.conf,self.name,self.chain,self.index,x,y,z)
-			ofp.write(line)
-		else:
-			tmpatomline='HETATM%5d %-4s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n' 
-			x,y,z = atom.posi
-			line = tmpatomline%(atom.index,atom.name,atom.conf,self.name,self.chain,self.index,x,y,z)
-			ofp.write(line)
-
+                pass
+                if len(atom.name) != 4 :
+                    x,y,z = atom.posi
+                    line = atomline%(atom.index,atom.name,atom.conf,self.name,self.chain,self.index,x,y,z)
+                    ofp.write(line)
+                else:
+                    tmpatomline='HETATM%5d %-4s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n' 
+                    x,y,z = atom.posi
+                    line = tmpatomline%(atom.index,atom.name,atom.conf,self.name,self.chain,self.index,x,y,z)
+                    ofp.write(line)
             if self.name not in standard_protein_residues:ofp.write('TER\n')
         else:
             ofp = open(ofile,'a')
