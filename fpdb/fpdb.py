@@ -36,7 +36,7 @@ HBOND_ANGLE_CUTOFF = 0.666667*math.pi # pi
 PROGS = { "I-interpret":"/home/fuqy/Software/I-interpret/bin/I-interpret" ,
           "pdbconvert":"/opt/schrodinger2016-2/utilities/pdbconvert",
           "hetgrp_ffgen":"/opt/schrodinger2016-2/utilities/hetgrp_ffgen",
-          "opls_to_gmx":"~/.ffallrain/opls2005_to_gmx.py",
+          "opls_to_gmx":"~/.ffallrain/fqy_scripts/opls2005_to_gmx.py",
         }
 
 if True: ### residue names 
@@ -274,35 +274,39 @@ class fCHEMO():
         self.load_parameters_from_file(nb_itp,top)
 
     def load_parameters_from_file(self,nb_itp,top):
-        # vdw
-        flag = False        
-        for line in open(nb_itp):
-            if "atomtypes" in line:
-                flag = True
-                continue
-            if flag :
-                if "name" not in line:
+        try :
+            # vdw
+            flag = False        
+            for line in open(nb_itp):
+                if "atomtypes" in line:
+                    flag = True
+                    continue
+                if flag :
+                    if "name" not in line:
+                        if line.strip() != "":
+                            name = line.split()[0]
+                            sig = float(line.split()[5])
+                            eps = float(line.split()[6])
+                            self.atoms_d[name].sig = sig
+                            self.atoms_d[name].eps = eps
+            # charge
+            flag = False
+            for line in open(top):
+                if "atoms" in line:
+                    flag = True
+                    continue
+                elif "bonds" in line:
+                    flag = False
+                    continue
+                if flag :
                     if line.strip() != "":
-                        name = line.split()[0]
-                        sig = float(line.split()[5])
-                        eps = float(line.split()[6])
-                        self.atoms_d[name].sig = sig
-                        self.atoms_d[name].eps = eps
-        # charge
-        flag = False
-        for line in open(top):
-            if "atoms" in line:
-                flag = True
-                continue
-            elif "bonds" in line:
-                flag = False
-                continue
-            if flag :
-                if line.strip() != "":
-                    if line.strip()[0] != ";":
-                        name = line.split()[1]
-                        charge = float(line.split()[6])
-                        self.atoms_d[name].charge = charge
+                        if line.strip()[0] != ";":
+                            name = line.split()[1]
+                            charge = float(line.split()[6])
+                            self.atoms_d[name].charge = charge
+        except Exception as e:
+            print("##### Load parameter Fail: %s"%self.name)
+            print(e.message)
 
 
     def __init__(self,resi_lines=None):
