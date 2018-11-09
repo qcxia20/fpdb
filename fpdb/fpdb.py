@@ -5,6 +5,7 @@ import math
 import sys,os
 import numpy as np
 from .fhet import hetnames,cofactors
+import copy
 
 MASS =    {'O':15.999,  'N':14.010,
            'C':12.010,  'H': 1.008,
@@ -726,6 +727,8 @@ class fCHAIN():
         self.chain_name = chain_index
     def add_resi(self,resi):
         self.residues.append(resi)
+    def delete_resi(self,resi):
+        self.residues.remove(resi)
 
 class fTOPOLOGY():
     @staticmethod
@@ -761,6 +764,23 @@ class fTOPOLOGY():
             else:
                 self.chains[resi.chain] = fCHAIN(resi.chain)
                 self.chains[resi.chain].add_resi(resi)
+
+    def add_residue(self, resi):
+        self.residues.append(resi)
+        self.residues_d[resi.index] = resi 
+        if resi.chain in self.chains.keys():
+            self.chains[resi.chain].add_resi(resi)
+        else:
+            self.chains[resi.chain] = fCHAIN(resi.chain)
+            self.chains[resi.chain].add_resi(resi)
+    def remove_residue(self,resi):
+        self.residues.remove(resi)
+        del(self.residues_d[resi.index])
+        try:
+            self.chains[resi.chain].delete_resi(resi)
+        except Exception as e:
+            print(e.message)
+        
 
     def get_protein_residues(self):
         prot_residues = list()
@@ -799,10 +819,12 @@ class fTOPOLOGY():
             residue.write_pdb(ofp)
 
 class fPDB:
-    def __init__(self,frame, fragmentation=False):
+    def __init__(self,frame = None, fragmentation=False):
         lines = None
         if hasattr(frame,'isalpha'):
             lines = open(frame).readlines()
+        elif frame == None:
+            lines = list()
         else:
             lines = frame
 
@@ -973,6 +995,22 @@ class fPDB:
                 h1.posi[i] = newcoord1[i] + nz.posi[i]
                 h2.posi[i] = newcoord2[i] + nz.posi[i]
                 h3.posi[i] = newcoord3[i] + nz.posi[i]
+    def choose_conformation(self,conf=None):
+        if 'conf' == None:
+            'conf' == 'A'
+
+        tmpdb = copy.deepcopy(self)
+        tmpdb.topology = fTOPOLOGY(list())
+        for resi in self.topology.residues:
+            tmpresi = copy.deepcopy(resi)
+            tmpresi.atoms = list()
+            tmpresi.atoms_d = dict()
+            for atom in resi.atoms :
+                if atom.conf in (" ",conf):
+                    tmpresi.add_atom(atom)
+            tmpdb.topology.add_residue(tmpresi)
+        
+        return tmpdb
             
 ###### Function to compute vdw
 def calc_vdw(a,b,dist_2):
