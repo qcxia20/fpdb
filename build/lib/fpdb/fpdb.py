@@ -1011,18 +1011,6 @@ class fPDB:
             tmpdb.topology.add_residue(tmpresi)
         
         return tmpdb
-
-    def find_rec_hbond_donors(self):
-        tmplist = list()
-        for resi in self.topology.get_protein_residues():
-            tmplist.extend(resi.find_hbond_donar())
-        return tmplist
-
-    def find_rec_hbond_acceptors(self):
-        tmplist = list()
-        for resi in self.topology.get_protein_residues():
-            tmplist.extend(resi.find_hbond_acceptor())
-        return tmplist
             
 ###### Function to compute vdw
 def calc_vdw(a,b,dist_2):
