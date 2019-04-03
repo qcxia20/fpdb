@@ -309,7 +309,6 @@ class fCHEMO():
             print("##### Load parameter Fail: %s"%self.name)
             print(e.message)
 
-
     def __init__(self,resi_lines=None):
         if resi_lines == None:
             resi_lines = list()
@@ -781,7 +780,6 @@ class fTOPOLOGY():
         except Exception as e:
             print(e.message)
         
-
     def get_protein_residues(self):
         prot_residues = list()
         for resi in self.residues:
