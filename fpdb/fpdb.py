@@ -546,7 +546,7 @@ class fCHEMO():
                 names.add(atom.name)
             else:
                 pass
-        self.atom = tmp_atoms
+        self.atoms = tmp_atoms
 
 class fSDF_MOL(fCHEMO):
     def __init__(self, sdf_frame):
@@ -575,7 +575,7 @@ class fRING(fCHEMO):
     def __init__(self,atom_list):
         fCHEMO.__init__(self,[])
         for atom in atom_list:
-            self.atom.append(atom)
+            self.atoms.append(atom)
 
 class fHbond(fCHEMO):
     def __init__(self,d,h,a):
@@ -994,8 +994,8 @@ class fPDB:
                 h2.posi[i] = newcoord2[i] + nz.posi[i]
                 h3.posi[i] = newcoord3[i] + nz.posi[i]
     def choose_conformation(self,conf=None):
-        if 'conf' == None:
-            'conf' == 'A'
+        if conf == None:
+            conf = 'A'
 
         tmpdb = copy.deepcopy(self)
         tmpdb.topology = fTOPOLOGY(list())
