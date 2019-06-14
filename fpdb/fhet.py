@@ -1215,6 +1215,7 @@ H4B
 SCA
 TPP
 UMP
+IYR
 '''
 cofactors = list()
 for a in s.split():

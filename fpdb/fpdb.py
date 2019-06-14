@@ -106,7 +106,6 @@ if True: ### residue names
     for key,value in one_letter_code.items():
         three_letter_code[value] = key
 
-
 if True: ### Global varieties 
     newnew = '/home/fuqiuyu/.ffallrain/newnew'
     TMPFILE = 'FIND_RING.PDB'
@@ -772,6 +771,7 @@ class fTOPOLOGY():
         else:
             self.chains[resi.chain] = fCHAIN(resi.chain)
             self.chains[resi.chain].add_resi(resi)
+
     def remove_residue(self,resi):
         self.residues.remove(resi)
         del(self.residues_d[resi.index])
@@ -1068,7 +1068,6 @@ def atomicEF(a,b):
     Felec = - k*chg1*chg2*(x1-x0)/(r*r2)
     return (Evdw + Eelec)*kJ_to_kcal, (Fvdw + Felec)*kJ_to_kcal/10 # to A
 
-
 ###### dist_2 atom atom
 def dist_2(a,b):
     if hasattr(a,'posi'):
@@ -1144,7 +1143,6 @@ def dihedral(a1,b1,b2,a2):
     angle = math.atan2(y,x)
     return angle
     
-
 def potential_atom_atom( atoma,atomb ):
     d_2 = dist_2(atoma,atomb)
     vdw =  calc_vdw(atoma,atomb,d_2) 
