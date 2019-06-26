@@ -67,7 +67,7 @@ class fSDF:
             print("##### Error Loading SDF file %s "%str(infile))
             print(e.message)
     def save_xyz(self,out = None,name=None):
-        print out
+        print( out )
         if hasattr(out,'write'):
             ofp = out
         elif hasattr(out,'upper'):
