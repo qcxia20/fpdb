@@ -13,7 +13,7 @@ pdb.load_ff_params(gmxtop)
 
 vdw,chg = fpdb.potential_resi( pdb.topology.residues[0],pdb.topology.residues[1] )
 nearest_dist = fpdb.dist_resi_resi(pdb.topology.residues[0], pdb.topology.residues[1])
-print("%s energy %f dist %f "%(sys.argv[1], vdw+chg, nearest_dist))
+print(("%s energy %f dist %f "%(sys.argv[1], vdw+chg, nearest_dist)))
 #print "vDW:",vdw
 #print "Charge:",chg
 

@@ -1,16 +1,24 @@
 #!/usr/bin/python
 
+nonbonded = '/home/fuqy/Software/gromacs-5.1.4/share/top/amber99sb.ff/ffnonbonded.itp'
+rtp = '/home/fuqy/Software/gromacs-5.1.4/share/top/amber99sb.ff/aminoacids.rtp'
+watermodel = '/home/fuqy/Software/gromacs-5.1.4/share/top/amber99sb.ff/tip3p.itp'
 class gmxtop:
     # private variables
     _atomtype = list()
     _charge = dict()
-    _resitype = list()
-    _resi = dict()
-    _resi_amber = dict()
     _vdw = dict()
 
-    def __init__(self,nonbondfile,rtpfile,waterfile):
-        self.make_amb2gmx_table()
+    _resitype = list()
+    _resi = dict()
+
+    ## For Amber atoms 
+    _resi_amber = dict()
+    _resitype_amber = list()  ##
+
+
+    def __init__(self,nonbondfile=nonbonded,rtpfile=rtp,waterfile=watermodel):
+        self.make_gmx2amb_table()
 
         for line in open(nonbondfile):
             if line.strip()[0] not in (';','['):
@@ -23,6 +31,10 @@ class gmxtop:
 
         for name,resilines in self._nextresiline(rtpfile):
             self._resitype.append(name)
+            
+            ### for Amber name                        
+            self._resitype_amber.append(name)  #
+
             self._resi[name] = list()
             self._resi_amber[name] = list()
             for line in resilines:
@@ -30,10 +42,7 @@ class gmxtop:
                 n = items[0]
 
                 ### For Amber name
-                try:
-                    na = self.get_amb2gmx_name(name,n) 
-                except:
-                    na = n
+                na = self.get_gmx2amb_name(name,n)  ##
 
                 t = items[1]
                 c = float(items[2])
@@ -41,7 +50,7 @@ class gmxtop:
                 self._resi[name].append( (n,s,e,c) )
                 
                 ### For Amber name
-                self._resi_amber[name].append( (na,s,e,c) )
+                self._resi_amber[name].append( (na,s,e,c) ) ###
         
         for name,resilines in self._nextresiline(waterfile):
             name = 'HOH'
@@ -88,47 +97,69 @@ class gmxtop:
     def get_resilist(self):
         return self._resitype
 
+    def get_resilist_amber(self):
+        return self._resitype_amber
+
     def get_resi( self, name ):
         return self._resi[name]
+
+    def get_resi_amber( self, name ):
+        return self._resi_amber[name]
                         
     def debug(self):
-        print("ATOM TYPE")
-        print(self._atomtype)
-        print("RESI TYPE")
+        pass
+        # print("ATOM TYPE")
+        # print(self._atomtype)
+        # print("RESI TYPE")
         print(self._resitype)
-        for t in self._resitype:
-            print(t)
-            print(self._resi[t])
+        # for t in self._resitype:
+        #     print(t)
+        #     print(self._resi[t])
+        #     # print(self._resi_amber[t])
+        # print(self.wildcard_types)
+        # print(self.gmx2amb_table)
+        print "NA"
+        tmp =  self.get_resi("NA")
+        for key in tmp:
+            print(key)
+        
+        # print(self._resi.keys())
+        # print(self._resi_amber.keys())
 
-    def make_amb2gmx_table(self):
-        self.amb2gmx_table =  dict()
+    def make_gmx2amb_table(self):
+        self.gmx2amb_table =  dict()
         self.wildcard_types = dict()
-        for line in self.amb2gmx_table_str.split('|'):
-            resi,namea,nameg = line.split(':')
+        for line in self.gmx2amb_table_str.split('|'):
+            resi,namea,nameb = line.split(':')
             resi = resi.strip()
+
+            namea = namea.strip()
+            if namea[0] in '0123456789' :
+                namea = namea[1:]+namea[0]
+            nameb = nameb.strip()
+            if nameb[0] in '0123456789' :
+                nameb = nameb[1:]+nameb[0]
+
             if resi != "*":
-                namea = namea.strip()
-                nameb = nameb.strip()
-                if resi in self.amb2gmx_table:
-                    self.amb2gmx_table[resi][namea]=nameb
+                if resi in self.gmx2amb_table:
+                    self.gmx2amb_table[resi][namea]=nameb
                 else:
-                    self.amb2gmx_table[resi] = dict()
-                    self.amb2gmx_table[resi][namea]=nameb
+                    self.gmx2amb_table[resi] = dict()
+                    self.gmx2amb_table[resi][namea]=nameb
             else:
                 self.wildcard_types[namea] = nameb
         pass
 
-    def get_amb2gmx_name(self, resi,n ):
+    def get_gmx2amb_name(self, resi,n ):
         if n in self.wildcard_types:
             return self.wildcard_types[n]
         else:
             try:
-                return self.wildcard_types[resi][n]
+                return self.gmx2amb_table[resi][n]
             except:
                 return n
 
-    amb2gmx_table_str = '''
-        WAT: OW :   O| 
+    gmx2amb_table_str = ''' WAT: OW :   O| 
         WAT:1HW :  H1|
         WAT:2HW :  H2|
         ILE:1HG2:HG21|
@@ -228,9 +259,19 @@ class gmxtop:
         HOH:1HW :  H1|
         HOH: HW2:  H2|
         HOH:2HW :  H2|
-        # *: OC1: O  |
-        # *: OC2: OXT|
-        # *:  H1: H1 |
-        # *:  H2: H2 |
-        # *:  H3: H3 |
-    '''
+        NA : NA : Na |
+        CL : CL : Cl |
+          *: OC1: O  |
+          *: OC2: OXT|
+          *:  H1: H1 |
+          *:  H2: H2 |
+          *:  H3: H3  ''' 
+
+if __name__ == '__main__' :
+    nonbonded = '/home/fuqy/Software/gromacs-5.1.4/share/top/amber99sb.ff/ffnonbonded.itp'
+    rtp = '/home/fuqy/Software/gromacs-5.1.4/share/top/amber99sb.ff/aminoacids.rtp'
+    watermodel = '/home/fuqy/Software/gromacs-5.1.4/share/top/amber99sb.ff/tip3p.itp'
+    top = gmxtop(nonbonded, rtp , watermodel)
+    top.debug()
+    # print(top.get_resilist_amber())
+    

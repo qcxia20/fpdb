@@ -111,14 +111,14 @@ class gmxtop:
         # print("ATOM TYPE")
         # print(self._atomtype)
         # print("RESI TYPE")
-        print(self._resitype)
+        print((self._resitype))
         # for t in self._resitype:
         #     print(t)
         #     print(self._resi[t])
         #     # print(self._resi_amber[t])
         # print(self.wildcard_types)
         # print(self.gmx2amb_table)
-        print "NA"
+        print("NA")
         tmp =  self.get_resi("NA")
         for key in tmp:
             print(key)

@@ -1,9 +1,9 @@
 import numpy as np
 from copy import copy
-from fpdb import fCHEMO
-from fpdb import fTOPOLOGY
-from fpdb import standard_protein_residues
-from _frag_type import FRAG_TYPE
+from .fpdb import fCHEMO
+from .fpdb import fTOPOLOGY
+from .fpdb import standard_protein_residues
+from ._frag_type import FRAG_TYPE
 
 
 class fFRAGTOPO(fTOPOLOGY):
@@ -81,7 +81,7 @@ class fFRAGTOPO(fTOPOLOGY):
 
   def add_frag(self):
     # generate non-backbone fragment
-    for frag_name, res2frag_dict in FRAG_TYPE.items():
+    for frag_name, res2frag_dict in list(FRAG_TYPE.items()):
       for resi in self.residues:
         if resi.name in res2frag_dict:
           f = fCHEMO()

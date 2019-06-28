@@ -103,7 +103,7 @@ if True: ### residue names
                'val'.upper() : 'V' ,
     }
     three_letter_code = dict()
-    for key,value in one_letter_code.items():
+    for key,value in list(one_letter_code.items()):
         three_letter_code[value] = key
 
 if True: ### Global varieties 
@@ -234,7 +234,7 @@ class fCHEMO():
                 pass
             else:
                 name = "H%d"%H_index
-                while ( name in self.atoms_d.keys() ):
+                while ( name in list(self.atoms_d.keys()) ):
                     H_index += 1
                     name = "H%d"%H_index
                 tmp_atom.name = name
@@ -244,7 +244,7 @@ class fCHEMO():
     def rename_atom(self):
         element_index = dict()
         for atom in self.atoms:
-            if not element_index.has_key(atom.element):
+            if atom.element not in element_index:
                 element_index[atom.element] = 0
                 newname = atom.element+"%d"%element_index[atom.element]
             else:
@@ -305,8 +305,8 @@ class fCHEMO():
                             charge = float(line.split()[6])
                             self.atoms_d[name].charge = charge
         except Exception as e:
-            print("##### Load parameter Fail: %s"%self.name)
-            print(e.message)
+            print(("##### Load parameter Fail: %s"%self.name))
+            print((e.message))
 
     def __init__(self,resi_lines=None):
         if resi_lines == None:
@@ -365,7 +365,7 @@ class fCHEMO():
 
     def remove_atom(self,atom):
         self.atoms.remove(atom)
-        if self.atoms_d.has_key(atom.name):
+        if atom.name in self.atoms_d:
             del(self.atoms_d[atom.name])
 
     def removeH(self):
@@ -463,12 +463,12 @@ class fCHEMO():
             ofp.close()
 
     def debug(self):
-        print('name',self.name)
-        print('index',self.index)
-        print('insertion',self.insertion)
+        print(('name',self.name))
+        print(('index',self.index))
+        print(('insertion',self.insertion))
         print('atoms:')
         for atom in self.atoms:
-            print(atom.name,)
+            print((atom.name,))
         print()
 
     def find_h(self):
@@ -704,19 +704,19 @@ class fCOMPOUND(fCHEMO):
         os.remove(TMPFILE)
     def list_connect_count(self):
         for atom in self.atoms:
-            print(atom.name,atom.connect_count)
+            print((atom.name,atom.connect_count))
     def debug(self):
         fCHEMO.debug(self)
         print("Hydrogen atoms:")
         for h in self.h_list:
-            print(h.name)
+            print((h.name))
         print("Heavy atoms:")
         for heavy in self.heavy_list:
-            print(heavy.name)
-        print("Num of Bonds:",len(self.bonds))
+            print((heavy.name))
+        print(("Num of Bonds:",len(self.bonds)))
         print("Atom index:")
         for atom in self.atoms:
-            print(atom.index,)
+            print((atom.index,))
         print()
    
 class fCHAIN():
@@ -757,7 +757,7 @@ class fTOPOLOGY():
 
         self.chains = dict()
         for resi in self.residues:
-            if resi.chain in self.chains.keys():
+            if resi.chain in list(self.chains.keys()):
                 self.chains[resi.chain].add_resi(resi)
             else:
                 self.chains[resi.chain] = fCHAIN(resi.chain)
@@ -766,7 +766,7 @@ class fTOPOLOGY():
     def add_residue(self, resi):
         self.residues.append(resi)
         self.residues_d[resi.index] = resi 
-        if resi.chain in self.chains.keys():
+        if resi.chain in list(self.chains.keys()):
             self.chains[resi.chain].add_resi(resi)
         else:
             self.chains[resi.chain] = fCHAIN(resi.chain)
@@ -778,7 +778,7 @@ class fTOPOLOGY():
         try:
             self.chains[resi.chain].delete_resi(resi)
         except Exception as e:
-            print(e.message)
+            print((e.message))
         
     def get_protein_residues(self):
         prot_residues = list()
@@ -848,7 +848,7 @@ class fPDB:
                 except:
                     pass
         if fragmentation:
-          from frag import fFRAGTOPO
+          from .frag import fFRAGTOPO
           self.topology = fFRAGTOPO(lines)
         else:
           self.topology = fTOPOLOGY(lines)
@@ -909,7 +909,7 @@ class fPDB:
         #                     atom.addparm( gmx_atom[3],gmx_atom[1],gmx_atom[2] )
         #         return 
 
-        print("##### Warning : Error in loading residue parameters ",resi.name,resi.index, " set all parameter within this residue to zero ")
+        print(("##### Warning : Error in loading residue parameters ",resi.name,resi.index, " set all parameter within this residue to zero "))
         for atom in resi.atoms:
             atom.addparm(0,0,0)
         # print("Error loading residue parameters",resi.name,resi.index)
@@ -923,7 +923,7 @@ class fPDB:
     def check_params(self):
         for resi in self.topology.residues:
             for atom in resi.atoms:
-                print(atom.name,atom.charge,atom.sig,atom.eps)
+                print((atom.name,atom.charge,atom.sig,atom.eps))
 
     def find_protein_center(self):
         n = 0
@@ -982,7 +982,7 @@ class fPDB:
             x = (nz.posi[0] - ce.posi[0])/r_tmp*R_HN
             y = (nz.posi[1] - ce.posi[1])/r_tmp*R_HN
             z = (nz.posi[2] - ce.posi[2])/r_tmp*R_HN
-            import frotate 
+            from . import frotate 
             matrix1 = frotate.build_matrix(h2.posi,h3.posi,-1.318)
             newcoord1 = frotate.rotate_atom( (x,y,z),(0,0,0),matrix1 )
             matrix2 = frotate.build_matrix(h3.posi,h1.posi,-1.318)
