@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import sys,os
 import fpdb
-import  gmx_top
+from fpdb import gmx_top
 import pdb as pdbdeb
 #pdbdeb.set_trace()
 pdb = fpdb.fPDB(sys.argv[1])
