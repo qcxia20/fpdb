@@ -62,7 +62,7 @@ class fSPA_summary:
             try:
                 water = fSPA_water(three_lines)
             except Exception as e:
-                print e
+                print(e)
                 sys.stderr.write("###### Error in reading SPA summary line:\n")
                 sys.stderr.write("-----# %s"%three_lines[0])
                 continue
@@ -101,7 +101,7 @@ def prepare_md(dirpath,output=sys.stdout):
             for line in open("%s/his.list"%dirpath):
                 histype[int(line.split()[0])] = line.split()[1]
             for resi in rec.topology.residues:
-                if resi.index in histype.keys():
+                if resi.index in list(histype.keys()):
                     resi.name = histype[resi.index]
         else:
             # else
@@ -115,7 +115,7 @@ def prepare_md(dirpath,output=sys.stdout):
                 #use HID by default
                 resi.name = "CYX"
 
-        print ">>>>> OUTPUT of fSPA.prepare_md(): "
+        print(">>>>> OUTPUT of fSPA.prepare_md(): ")
         rec.write_pdb("ftmp.pdb")
         cgi_system("addter.py ftmp.pdb ftmp_ter.pdb",output)
         
