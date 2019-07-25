@@ -15,7 +15,7 @@ class fXYZ:
                 z = float(self.lines[1].split()[2])
                 self.box = x,y,z
         except:
-            print("ERROR format of *.xyz file")
+            print "ERROR format of *.xyz file"
             sys.exit()
     def write_xyz(self,ofp):
         for line in self.lines:

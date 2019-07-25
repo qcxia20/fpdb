@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import fpdb
+from . import fpdb
 
 def next_sdflines(infile):
     if hasattr(infile,'readlines'):
@@ -64,8 +64,8 @@ class fSDF:
                 self.atoms.append(tmp)
             
         except Exception as e:
-            print("##### Error Loading SDF file %s "%str(infile))
-            print(e.message)
+            print(("##### Error Loading SDF file %s "%str(infile)))
+            print((e.message))
     def save_xyz(self,out = None,name=None):
         print( out )
         if hasattr(out,'write'):

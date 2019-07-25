@@ -92,13 +92,13 @@ class gmxtop:
         return self._resi[name]
                         
     def debug(self):
-        print("ATOM TYPE")
-        print(self._atomtype)
-        print("RESI TYPE")
-        print(self._resitype)
+        print "ATOM TYPE"
+        print self._atomtype
+        print "RESI TYPE"
+        print self._resitype
         for t in self._resitype:
-            print(t)
-            print(self._resi[t])
+            print t
+            print self._resi[t]
 
     def make_amb2gmx_table(self):
         self.amb2gmx_table =  dict()
@@ -109,7 +109,7 @@ class gmxtop:
             if resi != "*":
                 namea = namea.strip()
                 nameb = nameb.strip()
-                if resi in self.amb2gmx_table:
+                if self.amb2gmx_table.has_key(resi):
                     self.amb2gmx_table[resi][namea]=nameb
                 else:
                     self.amb2gmx_table[resi] = dict()
@@ -119,7 +119,7 @@ class gmxtop:
         pass
 
     def get_amb2gmx_name(self, resi,n ):
-        if n in self.wildcard_types:
+        if self.wildcard_types.has_key(n):
             return self.wildcard_types[n]
         else:
             try:

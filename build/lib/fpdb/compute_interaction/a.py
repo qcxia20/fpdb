@@ -25,7 +25,7 @@ vdw, chg = fpdb.potential_resi(r1,r2)
 
 vdw,chg = fpdb.potential_atom_atom(atom1,atom2)
 
-print ">>>>> vDW:",vdw
-print ">>>>> Charge:",chg
+print(">>>>> vDW:",vdw)
+print(">>>>> Charge:",chg)
 
 

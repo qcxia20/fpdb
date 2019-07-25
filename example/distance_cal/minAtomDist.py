@@ -13,7 +13,7 @@ for i, resi in enumerate(residues):
           keeper = (resi, atomi, resj, atomj)
 
 resi, atomi, resj, atomj = keeper
-print("\nmin distance atom pair are atom %s%d:%s%d and %s%d:%s%d\n"%(
+print(("\nmin distance atom pair are atom %s%d:%s%d and %s%d:%s%d\n"%(
   resi.name, resi.index, atomi.name, atomi.index, 
-  resj.name, resj.index, atomj.name, atomj.index,))
+  resj.name, resj.index, atomj.name, atomj.index,)))
   
