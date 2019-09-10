@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import sys,os
 
 nonbonded = '/home/fuqy/Software/gromacs-5.1.4/share/top/amber99sb.ff/ffnonbonded.itp'
 rtp = '/home/fuqy/Software/gromacs-5.1.4/share/top/amber99sb.ff/aminoacids.rtp'
@@ -48,9 +49,16 @@ class gmxtop:
                 c = float(items[2])
                 s,e = self._vdw[t]
                 self._resi[name].append( (n,s,e,c) )
+                if name == 'NA':
+                    self._resitype.append('Na')
+                    self._resi['Na'] = [ ('Na',s,e,c) ]
+                if name == 'CL':
+                    self._resitype.append('Cl')
+                    self._resi['Cl'] = [ ('Cl',s,e,c) ]
                 
                 ### For Amber name
                 self._resi_amber[name].append( (na,s,e,c) ) ###
+
         
         for name,resilines in self._nextresiline(waterfile):
             name = 'HOH'
@@ -107,24 +115,11 @@ class gmxtop:
         return self._resi_amber[name]
                         
     def debug(self):
-        pass
-        # print("ATOM TYPE")
-        # print(self._atomtype)
-        # print("RESI TYPE")
         print((self._resitype))
-        # for t in self._resitype:
-        #     print(t)
-        #     print(self._resi[t])
-        #     # print(self._resi_amber[t])
-        # print(self.wildcard_types)
-        # print(self.gmx2amb_table)
-        print("NA")
-        tmp =  self.get_resi("NA")
+        print("Na")
+        tmp =  self.get_resi("Na")
         for key in tmp:
             print(key)
-        
-        # print(self._resi.keys())
-        # print(self._resi_amber.keys())
 
     def make_gmx2amb_table(self):
         self.gmx2amb_table =  dict()

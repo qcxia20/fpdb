@@ -46,9 +46,9 @@ if True: ### residue names
          'ASN','GLN','SER','THR','CYS','CYX','GLY','PRO','ALA',
          'VAL','LEU','ILE','MET','PHE','TYR','TRP' )
 
-    standard_ion_redsidues = ('FE','MN','NI','CA','ZN','MG',"CL","NA")
+    standard_ion_residues = ('FE','MN','NI','CA','ZN','MG',"CL","NA","Cl","Na")
     standard_water_residues = ('HOH','SOL','WAT')
-    standard_residues = standard_protein_residues + standard_water_residues + standard_ion_redsidues
+    standard_residues = standard_protein_residues + standard_water_residues + standard_ion_residues
 
     protein_hbond_donors = (
         ('*','N','H'),
@@ -518,10 +518,10 @@ class fCHEMO():
 
     def find_hbond(self,resi): ## use three 
         if not hasattr(resi,'atoms'):
-            print("##### Error. Currently the only usage of find_h_bond() is : self.find_h_bond( another_residue ). Will stop ")
+            sys.stderr.write("##### Error. Currently the only usage of find_h_bond() is : self.find_h_bond( another_residue ). Will stop \n")
             sys.exit()
         if self == resi:
-            print("##### Warning: find hbond between identical residues. Will return empty list.")
+            sys.stderr.write("##### Warning: find hbond between identical residues. Will return empty list.\n")
             return list(),list()
 
         as_donar = list()
@@ -753,7 +753,10 @@ class fTOPOLOGY():
             self.residues.append( fRESIDUE(resi_lines) )
         self.residues_d = dict()
         for resi in self.residues:
-            self.residues_d[resi.index] = resi
+            if resi.index in self.residues_d:
+                self.residues_d[resi.index+10000] = resi
+            else:
+                self.residues_d[resi.index] = resi
 
         self.chains = dict()
         for resi in self.residues:
@@ -765,7 +768,10 @@ class fTOPOLOGY():
 
     def add_residue(self, resi):
         self.residues.append(resi)
-        self.residues_d[resi.index] = resi 
+        if resi.index in self.residues_d:
+            self.residues_d[resi.index+10000] = resi
+        else:
+            self.residues_d[resi.index] = resi
         if resi.chain in list(self.chains.keys()):
             self.chains[resi.chain].add_resi(resi)
         else:
@@ -793,6 +799,13 @@ class fTOPOLOGY():
             if resi.name in standard_water_residues:
                 water_residues.append(resi)
         return water_residues
+
+    def get_ion_residues(self):
+        ion_residues = list()
+        for resi in self.residues:
+            if resi.name in standard_ion_residues:
+                ion_residues.append(resi)
+        return ion_residues
 
     def find_residues(self, name = None , index = None ,atom_index = None ):
         result = list()
@@ -909,16 +922,79 @@ class fPDB:
         #                     atom.addparm( gmx_atom[3],gmx_atom[1],gmx_atom[2] )
         #         return 
 
-        print(("##### Warning : Error in loading residue parameters ",resi.name,resi.index, " set all parameter within this residue to zero "))
+        sys.stderr.write(("##### Warning : Error in loading residue parameters "+str(resi.name)+str(resi.index)+ " set all parameter within this residue to zero \n"))
         for atom in resi.atoms:
             atom.addparm(0,0,0)
         # print("Error loading residue parameters",resi.name,resi.index)
         return
 
-    def load_ff_params(self, gmxtop ):
+    def load_ff_param_from_topoltop(self,topolfile = None):
+        if topolfile == None:
+            sys.stderr.write("##### Warning: can not open topolfile. exit. \n")
+            return
+
+        # load atom types
+        atomtypelines = list()
+        flag = False
+        for line in open(topolfile):
+            if line.strip() and line.strip()[0] == '[':
+                if line.strip()[1:-1].strip() == 'atomtypes':
+                    flag = True
+                    continue
+                else:
+                    flag = False
+                    continue
+            if flag :
+                if line.strip() and line.strip()[0] != ';':
+                    atomtypelines.append(line)
+        atomtypes = dict()
+        for line in atomtypelines:
+            typename = line.split()[0]
+            sigma = float(line.split()[-2])
+            epsilon = float(line.split()[-1])
+            atomtypes[typename] = { 'sig':sigma, 'eps':epsilon }
+        
+
+        # read topology file atoms
+        atomlines = list()
+        flag = False
+        for line in open(topolfile):
+            if line.strip() and line.strip()[0] == '[':
+                if line.strip()[1:-1].strip() == 'atoms':
+                    flag = True
+                    continue
+                else:
+                    flag = False
+                    continue
+            if flag:
+                atomlines.append(line)
+
+        # find the atom on self, update 
+        for line in atomlines:
+            if line.strip() and line.strip()[0] != ';':
+                items = line.split()
+                index = int(items[0])
+                atomtype = items[1]
+                resindex = int(items[2])
+                resname = items[3]
+                name = items[4]
+                charge = float(items[6])
+
+                the_atom = self.topology.residues_d[resindex].atoms_d[name]
+                assert index == the_atom.index
+                the_atom.sig = atomtypes[atomtype]['sig']
+                the_atom.eps = atomtypes[atomtype]['eps']
+                the_atom.charge = charge
+
+        # exit
+        return
+
+    def load_ff_params(self, gmxtop = None, topolfile = None ):
         residues = list(self.topology.residues)
         for resi in residues :
             fPDB.load_ff_param_resi(resi,gmxtop)
+        if topolfile != None:
+            self.load_ff_param_from_topoltop(topolfile= topolfile)
 
     def check_params(self):
         for resi in self.topology.residues:
@@ -993,6 +1069,7 @@ class fPDB:
                 h1.posi[i] = newcoord1[i] + nz.posi[i]
                 h2.posi[i] = newcoord2[i] + nz.posi[i]
                 h3.posi[i] = newcoord3[i] + nz.posi[i]
+
     def choose_conformation(self,conf=None):
         if conf == None:
             conf = 'A'
