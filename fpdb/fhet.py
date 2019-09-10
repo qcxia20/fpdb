@@ -1,4 +1,14 @@
 s = '''
+OLC
+FME
+5CM
+8OG
+DOC
+CSX
+ALY
+F3S
+NCO
+MLY
 A
 T
 C
