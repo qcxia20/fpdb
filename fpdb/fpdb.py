@@ -140,7 +140,10 @@ class fATOM():
         self.sig = None
         self.eps = None
         self.conf = atom_line[16]
-        self.index = int(atom_line[6:11])
+        try:
+            self.index = int(atom_line[6:11])
+        except:
+            self.index = 9999
         x = float(atom_line[30:38])
         y = float(atom_line[38:46])
         z = float(atom_line[46:54])
@@ -416,7 +419,7 @@ class fCHEMO():
             atomline='ATOM  %5d  %-3s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n'
         else:
             atomline='HETATM%5d  %-3s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n' # qiuyu Fu
-        if self.name in standard_ion_redsidues:
+        if self.name in standard_ion_residues:
             atomline='HETATM%5d %-4s%1s%3s %1s%4d    %8.3f%8.3f%8.3f  1.00  0.00\n'
         # Case: no ofp
         if ofile is None:
@@ -1019,14 +1022,20 @@ class fPDB:
         else:
             return xs/n,ys/n,zs/n
 
-    def center(self, center_posi = (0,0,0) ):
+    def center(self, center_posi = (0,0,0), box = (0,0,0) ):
+        use_box = None
+        if box != (0,0,0):
+            use_box = box
+        else:
+            use_box = self.box
+            
         for resi in self.topology.residues:
             for atom in resi.atoms:
                 for i in range(3):
                     if atom.posi[i] - center_posi[i] > 0:
-                        atom.posi[i] = atom.posi[i] - self.box[i]*int( ( atom.posi[i]-center_posi[i] )/self.box[i] + 0.5 )
+                        atom.posi[i] = atom.posi[i] - use_box[i]*int( ( atom.posi[i]-center_posi[i] )/use_box[i] + 0.5 )
                     else :
-                        atom.posi[i] = atom.posi[i] + self.box[i]*int( ( - atom.posi[i] + center_posi[i] )/self.box[i] + 0.5 )
+                        atom.posi[i] = atom.posi[i] + use_box[i]*int( ( - atom.posi[i] + center_posi[i] )/use_box[i] + 0.5 )
 
     def write_pdb(self,ofp):
         if hasattr(ofp,'write'):
