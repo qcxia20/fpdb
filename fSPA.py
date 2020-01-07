@@ -3,6 +3,7 @@ import sys,os
 import fpdb
 from subprocess import Popen as sP 
 from subprocess import PIPE 
+import traceback
 
 
 class fSPA_water(fpdb.fCHEMO):
@@ -32,12 +33,20 @@ class fSPA_water(fpdb.fCHEMO):
         h1 = fpdb.fATOM()
         second_line = three_lines[1]
         items = second_line.split()
-        h1.posi = ( float(items[1]) , float(items[2]) , float(items[3]) )
+        # print(items)
+        try:
+            h1.posi = ( float(items[1]) , float(items[2]) , float(items[3]) )
+        except:
+            h1.posi = (0,0,0)
 
         h2 = fpdb.fATOM()
         third_line = three_lines[2]
         items = third_line.split()
-        h2.posi = ( float(items[1]) , float(items[2]) , float(items[3]) )
+
+        try:
+            h2.posi = ( float(items[1]) , float(items[2]) , float(items[3]) )
+        except:
+            h2.posi = (0,0,0)
 
         self.atoms = [ow,h1,h2]
         
@@ -62,9 +71,11 @@ class fSPA_summary:
             try:
                 water = fSPA_water(three_lines)
             except Exception as e:
-                print(e)
                 sys.stderr.write("###### Error in reading SPA summary line:\n")
                 sys.stderr.write("-----# %s"%three_lines[0])
+                tb = traceback.format_exc()
+                print(tb)
+                print(e)
                 continue
             self.waters.append(water)
             self.waters_d[water.index] = water

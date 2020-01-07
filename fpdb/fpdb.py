@@ -131,6 +131,13 @@ class fATOM():
         except:
             # print("DEBUG",tmpname)
             self.element = tmpname[0]  ### !!!! NOT FINISHED
+            # added for CL and BR ( but not perfectly work
+            if self.element == 'C':
+                if 'CL' in self.name and 'CC' not in self.name:
+                    self.element = 'Cl'
+            elif self.element == 'B':
+                if 'BR' in self.name:
+                    self.element = 'Br'
         self.resi_name = atom_line[17:20].strip()
         try:
             self.resi_index = int(atom_line[22:26])
@@ -256,12 +263,12 @@ class fCHEMO():
             atom.name = newname
             self.atoms_d[atom.name] = atom
 
-    def generate_OPLS_parameters(self, nc = 0, version = '2005', rename_atom = False):
+    def generate_OPLS_parameters(self, nc = 0, version = '2005', rename_atom = False, removeH=True):
         if rename_atom:
             self.rename_atom()
-
-        self.removeH()
-        self.addH( keep_current = False,nc = nc)
+        if removeH:
+            self.removeH()
+            self.addH( keep_current = False,nc = nc)
         resname = self.name.lower()
         self.write_pdb("%s.pdb"%resname)
         os.system("%s -ipdb %s.pdb -omae %s.mae"%(PROGS['pdbconvert'],resname,resname))
