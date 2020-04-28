@@ -760,7 +760,8 @@ class fTOPOLOGY():
     def __init__(self,lines):
         self.residues = list()
         for resi_lines in fTOPOLOGY._next_resi_lines(lines):
-            self.residues.append( fRESIDUE(resi_lines) )
+            if len( resi_lines ) > 0 :
+                self.residues.append( fRESIDUE(resi_lines) )
         self.residues_d = dict()
         for resi in self.residues:
             if resi.index in self.residues_d:
@@ -1305,6 +1306,14 @@ def next_frame_sdf(filename):
         else:
             frame.append(line)
 
+def fast_within_2(resia, resib, cutoff_2):
+    # Fast estimate whether given two residues were nearby within CUTOFF in 3-D space
+    coord1 = [ x.posi[:3] for x in resia.atoms ]
+    coord2 = [ x.posi[:3] for x in resib.atoms ]
+    pass
+    
+
+
 if False:
     def dist_atom(a,b):
         return math.sqrt( (a[0]-b[0])**2 + (a[1]-b[1])**2 + (a[2]-b[2])**2 )
@@ -1321,6 +1330,7 @@ if False:
                 node = atomb
         assert node != None
         return dist,node
+
 
 # Test
 if __name__ == '__main__':
