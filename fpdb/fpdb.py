@@ -1016,10 +1016,11 @@ class fPDB:
 
     def load_ff_params(self, gmxtop = None, topolfile = None ):
         residues = list(self.topology.residues)
-        for resi in residues :
-            fPDB.load_ff_param_resi(resi,gmxtop)
         if topolfile != None:
             self.load_ff_param_from_topoltop(topolfile= topolfile)
+        else:
+            for resi in residues :
+                fPDB.load_ff_param_resi(resi,gmxtop)
 
     def check_params(self):
         for resi in self.topology.residues:
