@@ -944,6 +944,11 @@ class fPDB:
             sys.stderr.write("##### Warning: can not open topolfile. exit. \n")
             return
 
+        tmptopolfile = 'TMPTOPOL.top'
+        import parmed.gromacs
+        top = parmed.gromacs.GromacsTopologyFile(topolfile)
+        top.write(tmptopolfile,combine='all')
+
         # load atom types
         atomtypelines = list()
         flag = False
@@ -961,27 +966,34 @@ class fPDB:
         atomtypes = dict()
         for line in atomtypelines:
             typename = line.split()[0]
-            sigma = float(line.split()[-2])
-            epsilon = float(line.split()[-1])
+            sigma = float(line.split()[5])
+            epsilon = float(line.split()[6])
             atomtypes[typename] = { 'sig':sigma, 'eps':epsilon }
-        
 
         # read topology file atoms
         atomlines = list()
         flag = False
         for line in open(topolfile):
-            if line.strip() and line.strip()[0] == '[':
-                if line.strip()[1:-1].strip() == 'atoms':
-                    flag = True
-                    continue
-                else:
-                    flag = False
-                    continue
-            if flag:
-                atomlines.append(line)
+            if line.strip() and line.strip()[0] != ';':
+                if line.strip() and line.strip()[0] == '[':
+                    if line.strip()[1:-1].strip() == 'atoms':
+                        flag = True
+                        continue
+                    else:
+                        flag = False
+                        continue
+                if flag:
+                    atomlines.append(line)
 
+        # generate self atom list
+        atom_list = list()
+        for resi in self.topology.residues:
+            for atom in resi.atoms:
+                atom_list.append(atom)
+
+        assert (len(atom_list) == len(atomlines))
         # find the atom on self, update 
-        for line in atomlines:
+        for line,atom in zip(atomlines,atom_list):
             if line.strip() and line.strip()[0] != ';':
                 items = line.split()
                 index = int(items[0])
@@ -991,13 +1003,15 @@ class fPDB:
                 name = items[4]
                 charge = float(items[6])
 
-                the_atom = self.topology.residues_d[resindex].atoms_d[name]
+                # the_atom = self.topology.residues_d[resindex].atoms_d[name]
+                the_atom = atom
                 assert index == the_atom.index
                 the_atom.sig = atomtypes[atomtype]['sig']
                 the_atom.eps = atomtypes[atomtype]['eps']
                 the_atom.charge = charge
 
         # exit
+        os.system("rm %s"%tmptopolfile)
         return
 
     def load_ff_params(self, gmxtop = None, topolfile = None ):
