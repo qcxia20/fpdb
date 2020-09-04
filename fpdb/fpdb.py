@@ -318,7 +318,7 @@ class fCHEMO():
             print(("##### Load parameter Fail: %s"%self.name))
             print((e.message))
 
-    def __init__(self,resi_lines=None):
+    def __init__(self,resi_lines=None,conf='OCC'):
         if resi_lines == None:
             resi_lines = list()
         try:
@@ -344,9 +344,11 @@ class fCHEMO():
         self.atoms_d = dict()
         for atom in self.atoms:
             self.atoms_d[atom.name] = atom
+
         self.var1 = None
         self.var2 = None
         self.var3 = None
+        # self.choose_conformation(conf=conf)
         self.del_duplicate_atoms()
 
     def getCOM(self):
@@ -546,17 +548,33 @@ class fCHEMO():
                     as_acceptor.append( fHbond(d,h,a) )
         return as_donar,as_acceptor
 
-    def del_duplicate_atoms(self):
-        # 
-        names = set()
-        tmp_atoms = list()
-        for atom in self.atoms:
-            if atom.name not in names:
-                tmp_atoms.append(atom)
-                names.add(atom.name)
-            else:
-                pass
-        self.atoms = tmp_atoms
+    def del_duplicate_atoms(self,conf = 'OCC'):
+        if conf == None:
+            conf = 'A'
+        tmpresi = copy.deepcopy(self)
+        if conf != 'OCC':
+            self.atoms = list()
+            self.atoms_d = dict()
+            done_atom_names = list()
+            for atom in tmpresi.atoms :
+                if atom.name not in done_atom_names:
+                    if atom.conf in (" ",conf):
+                        self.add_atom(atom)
+                    done_atom_names.append(atom.name)
+        else:
+            self.atoms = list()
+            self.atoms_d = dict()
+            done_atom_names = list()
+            for atom in tmpresi.atoms :
+                if atom.name not in done_atom_names:
+                    tmp_atoms = [ x for x in tmpresi.atoms if x.name == atom.name ]
+                    select_atom = tmp_atoms[0]
+                    for iatom in tmp_atoms[1:]:
+                        if iatom.occ > select_atom.occ:
+                            select_atom = iatom
+                    self.add_atom(select_atom)
+                    done_atom_names.append(atom.name)
+        return
 
 class fSDF_MOL(fCHEMO):
     def __init__(self, sdf_frame):
@@ -757,11 +775,11 @@ class fTOPOLOGY():
             oldresindex = resindex
         yield resi_lines
 
-    def __init__(self,lines):
+    def __init__(self,lines,conf = 'OCC'):
         self.residues = list()
         for resi_lines in fTOPOLOGY._next_resi_lines(lines):
             if len( resi_lines ) > 0 :
-                self.residues.append( fRESIDUE(resi_lines) )
+                self.residues.append( fRESIDUE(resi_lines,conf='OCC') )
         self.residues_d = dict()
         for resi in self.residues:
             if resi.index in self.residues_d:
@@ -952,7 +970,7 @@ class fPDB:
         # load atom types
         atomtypelines = list()
         flag = False
-        for line in open(topolfile):
+        for line in open(tmptopolfile):
             if line.strip() and line.strip()[0] == '[':
                 if line.strip()[1:-1].strip() == 'atomtypes':
                     flag = True
@@ -973,7 +991,7 @@ class fPDB:
         # read topology file atoms
         atomlines = list()
         flag = False
-        for line in open(topolfile):
+        for line in open(tmptopolfile):
             if line.strip() and line.strip()[0] != ';':
                 if line.strip() and line.strip()[0] == '[':
                     if line.strip()[1:-1].strip() == 'atoms':
@@ -1108,15 +1126,29 @@ class fPDB:
 
         tmpdb = copy.deepcopy(self)
         tmpdb.topology = fTOPOLOGY(list())
-        for resi in self.topology.residues:
-            tmpresi = copy.deepcopy(resi)
-            tmpresi.atoms = list()
-            tmpresi.atoms_d = dict()
-            for atom in resi.atoms :
-                if atom.conf in (" ",conf):
-                    tmpresi.add_atom(atom)
-            tmpdb.topology.add_residue(tmpresi)
-        
+        if conf != 'OCC':
+            for resi in self.topology.residues:
+                tmpresi = copy.deepcopy(resi)
+                tmpresi.atoms = list()
+                tmpresi.atoms_d = dict()
+                for atom in resi.atoms :
+                    if atom.conf in (" ",conf):
+                        tmpresi.add_atom(atom)
+                tmpdb.topology.add_residue(tmpresi)
+        else:
+            for resi in self.topology.residues:
+                tmpresi = copy.deepcopy(resi)
+                tmpresi.atoms = list()
+                tmpresi.atoms_d = dict()
+                done_atom_names = dict()
+                for atom in resi.atoms :
+                    tmp_atoms = [ x for x in resi.atoms if x.name == atom.name ]
+                    select_atom = tmp_atoms[0]
+                    for iatom in tmp_atoms[1:]:
+                        if iatom.occ > select_atom.occ:
+                            select_atom = iatom
+                    tmpresi.add_atom(select_atom)
+                tmpdb.topology.add_residue(tmpresi)
         return tmpdb
 
     def find_rec_hbond_donors(self):
@@ -1191,6 +1223,7 @@ def dist_2(a,b):
 
 def dist(a,b):
     return math.sqrt( dist_2(a,b) )
+
 def dist_resi_resi_2(a,b):
     assert len(a.atoms)>0 and len(b.atoms)>0
     dist = BIG_NUM
@@ -1200,6 +1233,19 @@ def dist_resi_resi_2(a,b):
             if tmp < dist:
                 dist = tmp
     return dist
+
+def dist_heavy_resi_resi_2(a,b):
+    assert len(a.atoms)>0 and len(b.atoms)>0
+    dist = BIG_NUM
+    for i in a.atoms:
+        if i.element != 'H':
+            for j in b.atoms:
+                if j.element != 'H':
+                    tmp = dist_2(i,j)
+                    if tmp < dist:
+                        dist = tmp
+    return dist
+
 def dist_resi_resi(a,b):
     return math.sqrt(dist_resi_resi_2(a,b))
 def dist_atom_resi_2(a,b):
@@ -1327,8 +1373,6 @@ def fast_within_2(resia, resib, cutoff_2):
     coord2 = [ x.posi[:3] for x in resib.atoms ]
     pass
     
-
-
 if False:
     def dist_atom(a,b):
         return math.sqrt( (a[0]-b[0])**2 + (a[1]-b[1])**2 + (a[2]-b[2])**2 )
@@ -1345,7 +1389,6 @@ if False:
                 node = atomb
         assert node != None
         return dist,node
-
 
 # Test
 if __name__ == '__main__':
