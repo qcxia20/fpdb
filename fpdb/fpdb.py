@@ -859,7 +859,7 @@ class fTOPOLOGY():
             residue.write_pdb(ofp)
 
 class fPDB:
-    def __init__(self,frame = None, fragmentation=False):
+    def __init__(self,frame = None, fragmentation=False, conf = 'OCC'):
         lines = None
         if hasattr(frame,'isalpha'):
             lines = open(frame).readlines()
@@ -893,7 +893,7 @@ class fPDB:
           from .frag import fFRAGTOPO
           self.topology = fFRAGTOPO(lines)
         else:
-          self.topology = fTOPOLOGY(lines)
+          self.topology = fTOPOLOGY(lines,conf = 'OCC')
 
     @staticmethod
     def load_ff_param_resi(resi,gmxtop):
