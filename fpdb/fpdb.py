@@ -41,7 +41,7 @@ PROGS = { "I-interpret":"/home/fuqy/Software/I-interpret/bin/I-interpret" ,
         }
 
 if True: ### residue names 
-    standard_protein_residues = ('ARG','LYS','HIS','HIP','HIE',
+    standard_protein_residues = ('ARG','LYS','HIS','HIP','HIE','HSE',"HSD","HSP",
          'HID','ASP','GLU',
          'ASN','GLN','SER','THR','CYS','CYX','GLY','PRO','ALA',
          'VAL','LEU','ILE','MET','PHE','TYR','TRP' )
@@ -575,6 +575,11 @@ class fCHEMO():
                     self.add_atom(select_atom)
                     done_atom_names.append(atom.name)
         return
+
+    def axis_transform(self, atomo , atom1, atom2 ):
+        shift = atomo.posi[:3]
+        pass
+        
 
 class fSDF_MOL(fCHEMO):
     def __init__(self, sdf_frame):
@@ -1367,11 +1372,34 @@ def next_frame_sdf(filename):
         else:
             frame.append(line)
 
-def fast_within_2(resia, resib, cutoff_2):
+def fast_within_2(resia, resib, cutoff):
+    cutoff_2 = cutoff ** 2 
     # Fast estimate whether given two residues were nearby within CUTOFF in 3-D space
-    coord1 = [ x.posi[:3] for x in resia.atoms ]
-    coord2 = [ x.posi[:3] for x in resib.atoms ]
-    pass
+    coord1 = np.array([ x.posi[:3] for x in resia.atoms ])
+    coord2 = np.array([ x.posi[:3] for x in resib.atoms ])
+    xmin1,xmin2 = coord1[...,0].min(),coord2[...,0].min()
+    ymin1,ymin2 = coord1[...,1].min(),coord2[...,1].min()
+    zmin1,zmin2 = coord1[...,2].min(),coord2[...,2].min()
+    xmax1,xmax2 = coord1[...,0].max(),coord2[...,0].max()
+    ymax1,ymax2 = coord1[...,1].max(),coord2[...,1].max()
+    zmax1,zmax2 = coord1[...,2].max(),coord2[...,2].max()
+    if xmin1 - xmax2 > cutoff :
+        return False
+    if xmin2 - xmax1 > cutoff :
+        return False
+    if ymin1 - ymax2 > cutoff :
+        return False
+    if ymin2 - ymax1 > cutoff :
+        return False
+    if zmin1 - zmax2 > cutoff :
+        return False
+    if zmin2 - zmax1 > cutoff :
+        return False
+
+    for (x1,y1,z1) in coord1:
+        for (x2,y2,z2) in coord2:
+            if dist_2((x1, y1,z1), (x2, y2,z2)) <= cutoff_2:
+                return True
     
 if False:
     def dist_atom(a,b):

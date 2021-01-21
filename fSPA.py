@@ -202,6 +202,9 @@ def submit_job(index,stype='AMOEBA',queue='gpu',output=sys.stdout):
         cgi_system("scp -r %s fuqy@k209:/pubhome/fuqy/%s_%s"%(dir_path,name,index), output)
         # cgi_system("ssh fuqy@k209 cp /pubhome/fuqy/run.sh /pubhome/fuqy/Auto_%s/"%(name,),output )
         cgi_system("ssh fuqy@k209 bash /pubhome/fuqy/submit.sh %s %s"%(name,index),output)
+    elif stype == 'AMBER' and queue == 'gpu':
+        cgi_system("scp -r %s fuqy@k209:/pubhome/fuqy/%s_%s"%(dir_path,name,index), output)
+
     return
 
 def run_spa_md(dirpath,output=sys.stdout):
