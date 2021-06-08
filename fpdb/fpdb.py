@@ -34,10 +34,10 @@ BIG_NUM = 1.e10
 HBOND_DISTANCE_CUTOFF = 3.5  # angstron
 HBOND_ANGLE_CUTOFF = 0.666667*math.pi # pi
 
-PROGS = { "I-interpret":"/home/fuqy/Software/I-interpret/bin/I-interpret" ,
-          "pdbconvert":"/opt/schrodinger2016-2/utilities/pdbconvert",
-          "hetgrp_ffgen":"/opt/schrodinger2016-2/utilities/hetgrp_ffgen",
-          "opls_to_gmx":"~/.ffallrain/fqy_scripts/opls2005_to_gmx.py",
+PROGS = { "I-interpret":"/home/qyfu/Software/I-interpret/bin/I-interpret",
+          "pdbconvert":"/home/qyfu/Software/schrodinger2016-2/utilities/pdbconvert",
+          "hetgrp_ffgen":"/home/qyfu/Software/schrodinger2016-2/utilities/hetgrp_ffgen",
+          "opls_to_gmx":"/home/qyfu/.ffallrain/MyScripts/opls2005_to_gmx.py",
         }
 
 if True: ### residue names 
@@ -1133,6 +1133,7 @@ class fPDB:
                 tmpresi.atoms_d = dict()
                 for atom in resi.atoms :
                     if atom.conf in (" ",conf):
+                        atom.conf = ' '
                         tmpresi.add_atom(atom)
                 tmpdb.topology.add_residue(tmpresi)
         else:
@@ -1147,6 +1148,7 @@ class fPDB:
                     for iatom in tmp_atoms[1:]:
                         if iatom.occ > select_atom.occ:
                             select_atom = iatom
+                    select_atom.conf = ' '
                     tmpresi.add_atom(select_atom)
                 tmpdb.topology.add_residue(tmpresi)
         return tmpdb
