@@ -1,5 +1,5 @@
 {% set name = "fpdb" %}
-{% set version = "1.0.1" %}
+{% set version = "1.0.2" %}
 {% set PYTHON = "/usr/bin/env python" %}
 
 package:
