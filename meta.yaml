@@ -1,6 +1,7 @@
 {% set name = "fpdb" %}
 {% set version = "1.0.2" %}
 {% set PYTHON = "/usr/bin/env python" %}
+{% set PYTHONVERSION = "3.6" %}
 
 package:
   name: {{ name }}
@@ -13,11 +14,11 @@ source:
 build:
   skip: true # [win]
   number: 0
-  script: {{ PYTHON }} -m pip install . -vv
+  script: {{ PYTHON }} -m pip install . --python-version {{ PYTHONVERSION }} -vv
 
 requirements:
   host:
-    - python>=3.6
+    - python>={{ PYTHONVERSION }}
     - numpy>=1.1.0
     - pip
     - pbr
