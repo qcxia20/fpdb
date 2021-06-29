@@ -17,14 +17,14 @@ build:
 
 requirements:
   host:
-    - python
-    - numpy
+    - python>=3.6
+    - numpy>=1.1.0
     - pip
+    - pbr
   run:
     - h5py
     - matplotlib
     - numpy
-    - pandas
     - python
     - scipy
 
