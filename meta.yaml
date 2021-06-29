@@ -14,20 +14,21 @@ source:
 build:
   skip: true # [win]
   number: 0
-  script: {{ PYTHON }} -m pip install . --python-version {{ PYTHONVERSION }} -vv
+  script: {{ PYTHON }} -m pip install . -vv
 
 requirements:
   host:
-    - python>={{ PYTHONVERSION }}
-    - numpy>=1.1.0
-    - pip
-    - pbr
+    # - python >={{ PYTHONVERSION }}
+    - python 3.6
+    - numpy >=1.1.0
+    - pip 3.6
+    - pbr >=1.0.0
   run:
-    - h5py
-    - matplotlib
-    - numpy
-    - python>=3.6
-    - scipy
+    - python 3.6
+    - h5py >=1.0.0
+    - matplotlib >=1.0.0
+    - numpy>=1.1.0
+    - scipy >=1.1.0
 
 test:
   imports:
