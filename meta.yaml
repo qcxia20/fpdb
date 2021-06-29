@@ -1,0 +1,44 @@
+{% set name = "fpdb" %}
+{% set version = "1.0.0" %}
+{% set PYTHON = "/usr/bin/env python" %}
+
+package:
+  name: {{ name }}
+  version: {{ version }}
+
+source:
+  git_url: "https://github.com/hnlab/fpdb.git"
+    #  sha256: 2c348f41086597fa00896fe76d5618b7180d534eba655da74f4ad8021ca9ba7e
+
+build:
+  skip: true # [win]
+  number: 0
+  script: {{ PYTHON }} -m pip install . -vv
+
+requirements:
+  host:
+    - python
+    - numpy
+    - pip
+  run:
+    - h5py
+    - matplotlib
+    - numpy
+    - pandas
+    - python
+    - scipy
+
+test:
+  imports:
+    - fpdb
+
+about:
+  home: "https://github.com/hnlab/fpdb"
+  license: MIT
+  license_file: LICENSE 
+
+extra:
+  recipe-maintainers:
+    - ffallrain
+
+

@@ -1,4 +1,4 @@
 from setuptools import setup
 
-config = {'setup_requires': ['pbr'], 'pbr': True}
+config = {'setup_requires': [], }
 setup(**config)
